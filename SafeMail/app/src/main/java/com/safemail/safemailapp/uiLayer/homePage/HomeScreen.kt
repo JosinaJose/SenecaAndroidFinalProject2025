@@ -1,41 +1,47 @@
 package com.safemail.safemailapp.uiLayer.homePage
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
-
-
-
-import com.safemail.safemailapp.R
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.safemail.safemailapp.uiLayer.newsPage.NewsScreen
 import com.safemail.safemailapp.components.NormalTextComponent
-import com.safemail.safemailapp.scaffold.SafeMailHomeScreen
-
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
+import com.safemail.safemailapp.scaffold.SafeMailBottomBar
 
 @Composable
-fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
-) {
-    NormalTextComponent(
-        value = stringResource(R.string.greeting_message)
-    )
+fun HomeScreen() {
+    val navController = rememberNavController()
+
     Scaffold(
-        bottomBar = { SafeMailHomeScreen() },
-        content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Welcome!")
+        bottomBar = {
+            SafeMailBottomBar(navController)
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable("home") {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    NormalTextComponent("Home Content")
+                }
+            }
+
+            composable("news") {
+                NewsScreen()
             }
         }
-    )
+    }
 }

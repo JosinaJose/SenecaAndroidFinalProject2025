@@ -1,66 +1,53 @@
 package com.safemail.safemailapp.components
 
 
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.foundation.text.KeyboardOptions
-
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.*
-
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.TextButton
+
+
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-
-
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
-fun NormalTextComponent(value: String){
-    Text(text = value,
-        modifier = Modifier.fillMaxWidth().height(40.dp),
+fun NormalTextComponent(value: String) {
+    Text(
+        text = value,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp),
         style = TextStyle(
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
             fontStyle = FontStyle.Normal
-
         ),
         color = Color.Black,
-        textAlign = TextAlign.Center,
-
-
+        textAlign = TextAlign.Center
     )
 }
 
 @Composable
-fun HeadingTextComponent(value: String){
-    Text(text = value,
+fun HeadingTextComponent(value: String) {
+    Text(
+        text = value,
         modifier = Modifier.fillMaxWidth(),
-
         style = TextStyle(
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
@@ -92,6 +79,7 @@ fun AdminSignUpTextFields(
         singleLine = true
     )
 }
+
 @Composable
 fun PasswordTextField(
     labelValue: String,
@@ -112,17 +100,22 @@ fun PasswordTextField(
         onValueChange = onValueChange,
         label = { Text(text = labelValue) },
         singleLine = true,
-        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+        visualTransformation =
+            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
         trailingIcon = {
             Icon(
-                imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                contentDescription = if (showPassword) "Hide password" else "Show password",
-                modifier = Modifier.clickable { showPassword = !showPassword }
+                imageVector =
+                    if (showPassword) Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff,
+                contentDescription =
+                    if (showPassword) "Hide password" else "Show password",
+                modifier = Modifier.clickable {
+                    showPassword = !showPassword
+                }
             )
         }
     )
 }
-
 
 @Composable
 fun ButtonComponent(
