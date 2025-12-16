@@ -7,10 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 
-import com.safemail.safemailapp.screens.HomeScreen
-import com.safemail.safemailapp.screens.LoginScreen
-import com.safemail.safemailapp.screens.SignupScreen
-import com.safemail.safemailapp.screens.SplashScreen
+import com.safemail.safemailapp.uiLayer.homePage.HomeScreen
+import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
+import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
+import com.safemail.safemailapp.uiLayer.splash.SplashScreen
 
 @Composable
 fun MyNavHost(navController: NavHostController) {

@@ -1,17 +1,14 @@
-package com.safemail.safemailapp.views
+package com.safemail.safemailapp.uiLayer.adminRegister
 
-
-
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
 import com.safemail.safemailapp.backendAdmin.AdminRepository
 import com.safemail.safemailapp.backendAdmin.RetrofitInstance
 import com.safemail.safemailapp.dataModels.Admin
-
 import kotlinx.coroutines.launch
 
 class SignUpViewModel : ViewModel() {
@@ -88,7 +85,7 @@ class SignUpViewModel : ViewModel() {
                 errorMessage = "Email is required"
                 return false
             }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                 errorMessage = "Invalid email format"
                 return false
             }

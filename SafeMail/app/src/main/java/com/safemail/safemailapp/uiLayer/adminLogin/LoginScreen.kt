@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.screens
+package com.safemail.safemailapp.uiLayer.adminLogin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,7 +18,6 @@ import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
 
 import com.safemail.safemailapp.components.TextButtons
-import com.safemail.safemailapp.views.LoginViewModel
 
 
 @Composable

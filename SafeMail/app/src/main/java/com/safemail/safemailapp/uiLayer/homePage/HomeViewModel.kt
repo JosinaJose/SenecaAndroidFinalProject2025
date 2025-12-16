@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.views
+package com.safemail.safemailapp.uiLayer.homePage
 
 import androidx.lifecycle.ViewModel
 

@@ -1,14 +1,10 @@
-package com.safemail.safemailapp.views
+package com.safemail.safemailapp.uiLayer.adminLogin
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-
 import com.safemail.safemailapp.backendAdmin.RetrofitInstance
-
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException

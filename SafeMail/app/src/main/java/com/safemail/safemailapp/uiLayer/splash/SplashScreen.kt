@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.screens
+package com.safemail.safemailapp.uiLayer.splash
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,7 +15,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.R
-import com.safemail.safemailapp.views.SplashScreenViewModel
 
 
 @Composable
