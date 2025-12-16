@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">SafeMailApp</string>
+    <string name="hey_there">Hey there,</string>
+    <string name="create_account">Create an Account</string>
+    <string name="company_name">Company Name</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="emailTextFiled">Email Address</string>
+    <string name="passwordTxtFiled">Password</string>
+    <string name="confirmPassword">Confirm Password</string>
+    <string name="terms_and_conditions">By continuing you accept our Policy and Terms of Use</string>
+    <string name="register_button">Register</string>
+    <string name="greeting_message">Welcome Back</string>
+    <string name="login_button">"Login "</string>
+    <string name="existing_account">Already have an account? Login</string>
+    <string name="register_now">Do not have an account? Create one</string>
+
+</resources>
