@@ -1,16 +1,15 @@
 package com.safemail.safemailapp.navigation
 
 
+
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
-
 import com.safemail.safemailapp.uiLayer.homePage.HomeScreen
 import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
 import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
-import com.safemail.safemailapp.uiLayer.newsPage.NewsScreen
 import com.safemail.safemailapp.uiLayer.splash.SplashScreen
 
 @Composable
@@ -60,13 +59,9 @@ fun MyNavHost(navController: NavHostController) {
             )
         }
 
-
+        // Home Screen (contains News in bottom bar)
         composable(NavItem.Home.route) {
             HomeScreen()
         }
-        composable(NavItem.News.route) {
-            NewsScreen()
-        }
     }
-
 }
