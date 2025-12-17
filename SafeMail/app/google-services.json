@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "736138993092",
+    "project_id": "safemailempbackend",
+    "storage_bucket": "safemailempbackend.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736138993092:android:8fc9326d1fb89a002dd891",
+        "android_client_info": {
+          "package_name": "com.safemail.safemailapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAJaHY5YoF0TIIyqzTXptDtdeeETToJ_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

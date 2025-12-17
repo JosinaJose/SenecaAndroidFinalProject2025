@@ -15,8 +15,7 @@ import com.safemail.safemailapp.R
 import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.components.PasswordTextField
-import com.safemail.safemailapp.emplyeeDataModel.EmployeeStatus
-import com.safemail.safemailapp.uiLayer.adminLogin.LoginViewModel
+import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 @Composable
 fun EmployeeScreen(
     navController: NavHostController,
@@ -26,9 +25,9 @@ fun EmployeeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top
+            .verticalScroll(rememberScrollState())
     ) {
+
         NormalTextComponent(stringResource(R.string.add_emp))
 
         AdminSignUpTextFields(
@@ -61,51 +60,44 @@ fun EmployeeScreen(
             onValueChange = { viewModel.department.value = it }
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Email + Generate button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Generate button (only enabled when ready)
+        Button(
+            onClick = { viewModel.generateCredentials() },
+            enabled = viewModel.canGenerate(),
+            modifier = Modifier.fillMaxWidth()
         ) {
-
-            Box(modifier = Modifier.weight(1f)) {
-                AdminSignUpTextFields(
-                    labelValue = stringResource(R.string.emailTextFiled),
-                    value = viewModel.email.value,
-                    onValueChange = { viewModel.email.value = it }
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = { viewModel.generateEmail() },
-                modifier = Modifier.height(56.dp)
-            ) {
-                Text("Generate")
-            }
+            Text("Generate Email & Password")
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Email + Password (shown only after generation)
+        if (viewModel.isGenerated.value) {
 
-        PasswordTextField(
-            labelValue = stringResource(R.string.passwordTxtFiled),
-            value = viewModel.password.value,
-            onValueChange = { viewModel.password.value = it }
-        )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AdminSignUpTextFields(
+                labelValue = stringResource(R.string.emailTextFiled),
+                value = viewModel.email.value,
+                onValueChange = {}
+                //enabled = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            PasswordTextField(
+                labelValue = stringResource(R.string.passwordTxtFiled),
+                value = viewModel.password.value,
+                onValueChange = {},
+               // enabled = false
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = "Status",
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Text("Status", style = MaterialTheme.typography.bodyLarge)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-
             RadioButton(
                 selected = viewModel.employeeStatus.value == EmployeeStatus.ACTIVE,
                 onClick = { viewModel.employeeStatus.value = EmployeeStatus.ACTIVE }
@@ -123,24 +115,20 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Action buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            OutlinedButton(
-                onClick = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = false }
-                    }
-                }
-            ) {
+            OutlinedButton(onClick = {
+                navController.navigate("home")
+            }) {
                 Text("Cancel")
             }
 
             Button(
-                onClick = { viewModel.saveEmployee() }
+                onClick = { viewModel.saveEmployee() },
+                enabled = viewModel.isGenerated.value
             ) {
                 Text("Save")
             }

@@ -31,20 +31,17 @@ fun NewsScreen(
     }
 
     val newsResponse by newsViewModel.newsResponse.collectAsState()
-    val errorMessage by newsViewModel.errorMessage.collectAsState()
     val readLaterArticles by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
 
-    // Get URLs of read later articles for quick lookup
     val readLaterUrls = readLaterArticles.map { it.url }.toSet()
     val readLaterCount = readLaterArticles.size
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Custom Top Bar with Read Later Button
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        /* ---------------- TOP BAR ---------------- */
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 3.dp
         ) {
             Row(
@@ -54,14 +51,12 @@ fun NewsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left side: Back button and Title
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Home"
+                            contentDescription = "Back"
                         )
                     }
                     Text(
@@ -71,35 +66,30 @@ fun NewsScreen(
                     )
                 }
 
-                // Right side: Read Later Button with Badge
                 BadgedBox(
                     badge = {
                         if (readLaterCount > 0) {
-                            Badge {
-                                Text(readLaterCount.toString())
-                            }
+                            Badge { Text(readLaterCount.toString()) }
                         }
                     }
                 ) {
                     IconButton(onClick = onNavigateToReadLater) {
                         Icon(
                             imageVector = Icons.Filled.BookmarkBorder,
-                            contentDescription = "Read Later",
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = "Read Later"
                         )
                     }
                 }
             }
         }
 
+        /* ---------------- CONTENT ---------------- */
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            if (errorMessage != null) {
-                ErrorMessage(errorMessage = errorMessage ?: "")
-            }
 
             newsResponse?.articles?.let { articles ->
                 val totalPages = (articles.size + itemsPerPage - 1) / itemsPerPage

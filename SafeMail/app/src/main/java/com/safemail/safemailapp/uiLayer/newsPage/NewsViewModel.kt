@@ -1,5 +1,6 @@
 package com.safemail.safemailapp.uiLayer.newsPage
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.safemail.safemailapp.dataModels.Article
@@ -11,43 +12,36 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
-import android.util.Log
 
 class NewsViewModel(
     private val repository: ArticleRepository
 ) : ViewModel() {
 
-    // Get all saved articles (both favorites and read later)
-    val articles = repository.getAllArticles()
+    /* ---------------- ROOM DATA ---------------- */
 
-    // Get only read later articles
+    val articles = repository.getAllArticles()
     val readLaterArticles = repository.getReadLaterArticles()
+
+    /* ---------------- API RESPONSE ---------------- */
 
     private val _newsResponse = MutableStateFlow<NewsResponse?>(null)
     val newsResponse: StateFlow<NewsResponse?> = _newsResponse.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    /* ---------------- READ LATER (ROOM) ---------------- */
 
-    /* ---------------- READ LATER (ROOM DATABASE) ---------------- */
-
-    suspend fun toggleReadLater(article: Article) {
+    fun toggleReadLater(article: Article) {
         viewModelScope.launch {
-            // Check if article already exists in database
             val existingArticle = repository.getArticleByUrl(article.url)
 
             if (existingArticle != null) {
-                // Article exists - toggle the readLater flag
                 val updatedArticle = existingArticle.copy(
                     isReadLater = !existingArticle.isReadLater
                 )
                 repository.updateArticle(updatedArticle)
-                Log.d("RoomDB", "Updated article read later status: ${article.title}")
+                Log.d("RoomDB", "Updated read later: ${article.title}")
             } else {
-                // Article doesn't exist - insert with readLater = true
-                val newArticle = article.copy(isReadLater = true)
-                repository.insertArticle(newArticle)
-                Log.d("RoomDB", "Inserted article as read later: ${article.title}")
+                repository.insertArticle(article.copy(isReadLater = true))
+                Log.d("RoomDB", "Inserted read later: ${article.title}")
             }
         }
     }
@@ -56,24 +50,21 @@ class NewsViewModel(
         return repository.isReadLater(url)
     }
 
-    /* ---------------- FAVORITES (ROOM DATABASE) ---------------- */
+    /* ---------------- FAVORITES (ROOM) ---------------- */
 
     fun toggleFavorite(article: Article) {
         viewModelScope.launch {
             val existingArticle = repository.getArticleByUrl(article.url)
 
             if (existingArticle != null) {
-                // Article exists - toggle the favorite flag
                 val updatedArticle = existingArticle.copy(
                     isFavorite = !existingArticle.isFavorite
                 )
                 repository.updateArticle(updatedArticle)
-                Log.d("RoomDB", "Updated article favorite status: ${article.title}")
+                Log.d("RoomDB", "Updated favorite: ${article.title}")
             } else {
-                // Article doesn't exist - insert with favorite = true
-                val newArticle = article.copy(isFavorite = true)
-                repository.insertArticle(newArticle)
-                Log.d("RoomDB", "Inserted article as favorite: ${article.title}")
+                repository.insertArticle(article.copy(isFavorite = true))
+                Log.d("RoomDB", "Inserted favorite: ${article.title}")
             }
         }
     }
@@ -83,8 +74,6 @@ class NewsViewModel(
     fun getTopHeadlines(countryCode: String = "us", page: Int = 1) {
         viewModelScope.launch {
             try {
-                _errorMessage.value = null
-
                 val response: Response<NewsResponse> =
                     RetrofitInstance.newsApi.getHeadLines(
                         countryCode = countryCode,
@@ -93,11 +82,9 @@ class NewsViewModel(
 
                 if (response.isSuccessful) {
                     _newsResponse.value = response.body()
-                } else {
-                    _errorMessage.value = "Error: ${response.code()} ${response.message()}"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Unknown error"
+                Log.e("NewsAPI", "Failed to load headlines", e)
             }
         }
     }
@@ -105,25 +92,18 @@ class NewsViewModel(
     fun searchNews(query: String, page: Int = 1) {
         viewModelScope.launch {
             try {
-                _errorMessage.value = null
-
-                val response = RetrofitInstance.newsApi.searchForNews(
-                    searchQuery = query,
-                    pageNumber = page
-                )
+                val response =
+                    RetrofitInstance.newsApi.searchForNews(
+                        searchQuery = query,
+                        pageNumber = page
+                    )
 
                 if (response.isSuccessful) {
                     _newsResponse.value = response.body()
-                } else {
-                    _errorMessage.value = "Error: ${response.code()} ${response.message()}"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Unknown error"
+                Log.e("NewsAPI", "Search failed", e)
             }
         }
-    }
-
-    fun clearError() {
-        _errorMessage.value = null
     }
 }

@@ -1,6 +1,6 @@
 package com.safemail.safemailapp.uiLayer.newsPage
 
-
+/*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -39,4 +39,4 @@ fun ErrorMessage(errorMessage: String) {
             )
         }
     }
-}
+}*/
