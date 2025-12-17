@@ -1,8 +1,10 @@
 package com.safemail.safemailapp.scaffold
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
@@ -23,6 +25,18 @@ fun SafeMailBottomBar(navController: NavController) {
                 }
             }
         )
+        // Users/Employees Icon (Middle)
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Badge, contentDescription = "Employees") },
+            label = { Text("Employees") },
+            selected = currentRoute?.destination?.route == "employees",
+            onClick = {
+                navController.navigate("employees") {
+                    launchSingleTop = true
+                }
+            }
+        )
+
 
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Language, contentDescription = "News") },

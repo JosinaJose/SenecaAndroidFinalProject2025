@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun NewsScreen(
@@ -23,6 +24,7 @@ fun NewsScreen(
 ) {
     var currentPage by remember { mutableIntStateOf(0) }
     val itemsPerPage = 20
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         newsViewModel.getTopHeadlines()
@@ -30,8 +32,10 @@ fun NewsScreen(
 
     val newsResponse by newsViewModel.newsResponse.collectAsState()
     val errorMessage by newsViewModel.errorMessage.collectAsState()
-    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState()
+    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
 
+    // Get URLs of read later articles for quick lookup
+    val readLaterUrls = readLaterArticles.map { it.url }.toSet()
     val readLaterCount = readLaterArticles.size
 
     Column(
@@ -112,9 +116,11 @@ fun NewsScreen(
                     itemsIndexed(paginatedArticles) { _, article ->
                         NewsItemCard(
                             article = article,
-                            isReadLater = readLaterArticles.contains(article.url),
+                            isReadLater = readLaterUrls.contains(article.url),
                             onReadLaterClick = {
-                                newsViewModel.toggleReadLater(article)
+                                scope.launch {
+                                    newsViewModel.toggleReadLater(article)
+                                }
                             }
                         )
                     }

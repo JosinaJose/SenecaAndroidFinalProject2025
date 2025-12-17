@@ -1,6 +1,5 @@
 package com.safemail.safemailapp.uiLayer.newsPage
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,19 +11,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ReadLaterScreen(
     newsViewModel: NewsViewModel = viewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState()
-    val allArticles by newsViewModel.newsResponse.collectAsState()
-
-    // Filter articles that are marked as read later
-    val savedArticles = allArticles?.articles?.filter { article ->
-        readLaterArticles.contains(article.url)
-    } ?: emptyList()
+    // Collect read later articles from Room database
+    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -56,7 +52,7 @@ fun ReadLaterScreen(
         }
 
         // Content
-        if (savedArticles.isEmpty()) {
+        if (readLaterArticles.isEmpty()) {
             // Empty state
             Box(
                 modifier = Modifier
@@ -89,7 +85,7 @@ fun ReadLaterScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "${savedArticles.size} article${if (savedArticles.size != 1) "s" else ""} saved",
+                    text = "${readLaterArticles.size} article${if (readLaterArticles.size != 1) "s" else ""} saved",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -99,12 +95,14 @@ fun ReadLaterScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(savedArticles) { article ->
+                    items(readLaterArticles) { article ->
                         NewsItemCard(
                             article = article,
-                            isReadLater = true,
+                            isReadLater = true,  // Always true since we're in Read Later screen
                             onReadLaterClick = {
-                                newsViewModel.toggleReadLater(article)
+                                scope.launch {
+                                    newsViewModel.toggleReadLater(article)
+                                }
                             }
                         )
                     }

@@ -1,11 +1,14 @@
 package com.safemail.safemailapp.uiLayer.adminLogin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -16,19 +19,23 @@ import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.ButtonComponent
 import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
-
 import com.safemail.safemailapp.components.TextButtons
-
+import com.safemail.safemailapp.dataModels.Admin
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (admin: Admin) -> Unit = {},
     onCreateAccountClick: () -> Unit = {}
 ) {
-    // Handle navigation on login success
-    if (viewModel.loginSuccess.value) {
-        onLoginSuccess()
+    val loginSuccess by viewModel.loginSuccess
+    val currentAdmin by remember { derivedStateOf { viewModel.currentAdmin } }
+
+    // Navigate only when loginSuccess AND currentAdmin != null
+    if (loginSuccess && currentAdmin != null) {
+        LaunchedEffect(currentAdmin) {
+            onLoginSuccess(currentAdmin!!)
+        }
     }
 
     Surface(
@@ -49,7 +56,7 @@ fun LoginScreen(
             HeadingTextComponent(stringResource(R.string.greeting_message))
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Email and password fields bound to ViewModel
+            // Email field
             AdminSignUpTextFields(
                 labelValue = stringResource(R.string.emailTextFiled),
                 value = viewModel.emailText,
@@ -57,6 +64,7 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Password field
             AdminSignUpTextFields(
                 labelValue = stringResource(R.string.passwordTxtFiled),
                 value = viewModel.passwordText,
@@ -64,22 +72,21 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Login button
             ButtonComponent(
                 value = stringResource(R.string.login_button),
                 onClick = { viewModel.login() }
             )
 
-            // Optional: show error message
+            // Error message
             viewModel.errorMessage.value?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(text = error, color = Color.Red)
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // "Create an account" TextButton
-            TextButtons(
-                onClick = onCreateAccountClick
-            ) {
+            // Create account button
+            TextButtons(onClick = onCreateAccountClick) {
                 Text(
                     text = stringResource(R.string.register_now),
                     color = Color.Blue
@@ -89,6 +96,15 @@ fun LoginScreen(
     }
 }
 
-
-
-
+@Composable
+fun AdminProfileCircle(admin: Admin) {
+    val initials = "${admin.firstName.firstOrNull() ?: ""}${admin.lastName.firstOrNull() ?: ""}".uppercase()
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .background(Color.Gray, shape = CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = initials, color = Color.White)
+    }
+}

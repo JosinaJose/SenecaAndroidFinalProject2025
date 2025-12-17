@@ -16,5 +16,7 @@
     <string name="existing_account">Already have an account? Login</string>
     <string name="register_now">Do not have an account? Create one</string>
     <string name="news_page_heading">Top Headlines</string>
+    <string name="department">Department</string>
+    <string name="add_emp">Add Emplyee</string>
 
 </resources>

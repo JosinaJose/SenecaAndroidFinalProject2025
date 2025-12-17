@@ -2,24 +2,24 @@ package com.safemail.safemailapp.dataModels
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.safemail.safemailapp.dataModels.Source
+import kotlinx.serialization.Serializable
 
-
-
-
-
-@Entity(
-    tableName = "articles"
-)
+@Entity(tableName = "articles")
 data class Article(
-    @PrimaryKey(autoGenerate = true)
-    var id: Int? = null,
-    val author: String,
-    val content: String,
-    val description: String,
-    val publishedAt: String,
-    val source: Source,
-    val title: String,
-    val url: String,
-    val urlToImage: String
+    @PrimaryKey(autoGenerate = false)
+    val url: String = "",  // Provide default empty string
+    val author: String? = null,
+    val content: String? = null,
+    val description: String? = null,
+    val publishedAt: String? = null,
+    val source: Source? = null,
+    val title: String? = null,
+    val urlToImage: String? = null,
+    val isFavorite: Boolean = false,
+    val isReadLater: Boolean = false
+)
+@Serializable
+data class Source(
+    val id: String? = null,
+    val name: String? = null
 )

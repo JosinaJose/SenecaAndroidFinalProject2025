@@ -14,3 +14,5 @@ app.use('/admin', adminRoutes);
 app.get('/', (req, res) => res.send('SafeMail API running!'));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+;

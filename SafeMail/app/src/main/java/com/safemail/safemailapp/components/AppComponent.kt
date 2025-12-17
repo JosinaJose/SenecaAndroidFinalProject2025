@@ -69,7 +69,6 @@ fun AdminSignUpTextFields(
         label = { Text(text = labelValue) },
         colors = TextFieldDefaults.colors(
             focusedTextColor = Color.Black,
-            focusedIndicatorColor = Color.Gray,
             focusedLabelColor = Color.Gray,
             unfocusedIndicatorColor = Color.LightGray
         ),

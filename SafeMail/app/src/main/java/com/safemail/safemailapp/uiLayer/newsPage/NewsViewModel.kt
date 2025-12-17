@@ -3,15 +3,25 @@ package com.safemail.safemailapp.uiLayer.newsPage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.safemail.safemailapp.dataModels.Article
-import com.safemail.safemailapp.newsApi.RetrofitInstance
 import com.safemail.safemailapp.dataModels.NewsResponse
+import com.safemail.safemailapp.newsApi.RetrofitInstance
+import com.safemail.safemailapp.roomdatabase.ArticleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import android.util.Log
 
-class NewsViewModel : ViewModel() {
+class NewsViewModel(
+    private val repository: ArticleRepository
+) : ViewModel() {
+
+    // Get all saved articles (both favorites and read later)
+    val articles = repository.getAllArticles()
+
+    // Get only read later articles
+    val readLaterArticles = repository.getReadLaterArticles()
 
     private val _newsResponse = MutableStateFlow<NewsResponse?>(null)
     val newsResponse: StateFlow<NewsResponse?> = _newsResponse.asStateFlow()
@@ -19,54 +29,66 @@ class NewsViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // Track favorite articles
-    private val _favoriteArticles = MutableStateFlow<List<Article>>(emptyList())
-    val favoriteArticles: StateFlow<List<Article>> = _favoriteArticles.asStateFlow()
+    /* ---------------- READ LATER (ROOM DATABASE) ---------------- */
 
-    // Track read later articles (using Set of URLs for efficient lookup)
-    private val _readLaterArticles = MutableStateFlow<Set<String>>(emptySet())
-    val readLaterArticles: StateFlow<Set<String>> = _readLaterArticles.asStateFlow()
+    suspend fun toggleReadLater(article: Article) {
+        viewModelScope.launch {
+            // Check if article already exists in database
+            val existingArticle = repository.getArticleByUrl(article.url)
 
-    fun toggleFavorite(article: Article) {
-        val current = _favoriteArticles.value.toMutableList()
-        if (current.contains(article)) {
-            current.remove(article)
-        } else {
-            current.add(article)
-        }
-        _favoriteArticles.value = current
-    }
-
-    fun toggleReadLater(article: Article) {
-        article.url?.let { url ->
-            _readLaterArticles.value = if (_readLaterArticles.value.contains(url)) {
-                _readLaterArticles.value - url
+            if (existingArticle != null) {
+                // Article exists - toggle the readLater flag
+                val updatedArticle = existingArticle.copy(
+                    isReadLater = !existingArticle.isReadLater
+                )
+                repository.updateArticle(updatedArticle)
+                Log.d("RoomDB", "Updated article read later status: ${article.title}")
             } else {
-                _readLaterArticles.value + url
+                // Article doesn't exist - insert with readLater = true
+                val newArticle = article.copy(isReadLater = true)
+                repository.insertArticle(newArticle)
+                Log.d("RoomDB", "Inserted article as read later: ${article.title}")
             }
         }
     }
 
-    fun getReadLaterArticles(): List<Article> {
-        return _newsResponse.value?.articles?.filter {
-            _readLaterArticles.value.contains(it.url)
-        } ?: emptyList()
+    suspend fun isReadLater(url: String): Boolean {
+        return repository.isReadLater(url)
     }
 
-    fun isReadLater(article: Article): Boolean {
-        return article.url?.let { _readLaterArticles.value.contains(it) } ?: false
+    /* ---------------- FAVORITES (ROOM DATABASE) ---------------- */
+
+    fun toggleFavorite(article: Article) {
+        viewModelScope.launch {
+            val existingArticle = repository.getArticleByUrl(article.url)
+
+            if (existingArticle != null) {
+                // Article exists - toggle the favorite flag
+                val updatedArticle = existingArticle.copy(
+                    isFavorite = !existingArticle.isFavorite
+                )
+                repository.updateArticle(updatedArticle)
+                Log.d("RoomDB", "Updated article favorite status: ${article.title}")
+            } else {
+                // Article doesn't exist - insert with favorite = true
+                val newArticle = article.copy(isFavorite = true)
+                repository.insertArticle(newArticle)
+                Log.d("RoomDB", "Inserted article as favorite: ${article.title}")
+            }
+        }
     }
+
+    /* ---------------- NEWS API ---------------- */
 
     fun getTopHeadlines(countryCode: String = "us", page: Int = 1) {
         viewModelScope.launch {
             try {
-                _errorMessage.value = null // Clear previous errors
+                _errorMessage.value = null
 
                 val response: Response<NewsResponse> =
                     RetrofitInstance.newsApi.getHeadLines(
                         countryCode = countryCode,
                         pageNumber = page
-                        // no need to pass apiKey, default from Constants is used
                     )
 
                 if (response.isSuccessful) {
@@ -83,14 +105,12 @@ class NewsViewModel : ViewModel() {
     fun searchNews(query: String, page: Int = 1) {
         viewModelScope.launch {
             try {
-                _errorMessage.value = null // Clear previous errors
+                _errorMessage.value = null
 
-                val response: Response<NewsResponse> =
-                    RetrofitInstance.newsApi.searchForNews(
-                        searchQuery = query,
-                        pageNumber = page
-                        // apiKey automatically comes from Constants
-                    )
+                val response = RetrofitInstance.newsApi.searchForNews(
+                    searchQuery = query,
+                    pageNumber = page
+                )
 
                 if (response.isSuccessful) {
                     _newsResponse.value = response.body()

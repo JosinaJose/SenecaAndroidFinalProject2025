@@ -1,19 +1,24 @@
 package com.safemail.safemailapp.navigation
 
 
-
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
 import com.safemail.safemailapp.uiLayer.homePage.HomeScreen
 import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
 import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
 import com.safemail.safemailapp.uiLayer.splash.SplashScreen
+import com.safemail.safemailapp.dataModels.Admin
+import com.safemail.safemailapp.uiLayer.adminProfile.AdminInfoScreen
 
 @Composable
 fun MyNavHost(navController: NavHostController) {
+    // Shared state for the logged-in admin
+    val currentAdmin = remember { mutableStateOf<Admin?>(null) }
+
     NavHost(
         navController = navController,
         startDestination = NavItem.Splash.route
@@ -48,7 +53,8 @@ fun MyNavHost(navController: NavHostController) {
         // Login Screen
         composable(NavItem.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
+                onLoginSuccess = { admin ->
+                    currentAdmin.value = admin // store admin in shared state
                     navController.navigate(NavItem.Home.route) {
                         popUpTo(NavItem.Login.route) { inclusive = true }
                     }
@@ -59,9 +65,17 @@ fun MyNavHost(navController: NavHostController) {
             )
         }
 
-        // Home Screen (contains News in bottom bar)
+        // Home Screen
         composable(NavItem.Home.route) {
-            HomeScreen()
+            HomeScreen(currentAdmin) // pass logged-in admin
         }
+        composable("admin_info") {
+            AdminInfoScreen(
+                admin = currentAdmin.value!!,
+                onBack = { navController.popBackStack() },
+                onAdminUpdate = { updatedAdmin -> currentAdmin.value = updatedAdmin }
+            )
+        }
+
     }
 }
