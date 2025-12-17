@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.R
+import com.safemail.safemailapp.dataModels.Article
 import kotlinx.coroutines.launch
 
 @Composable
@@ -26,12 +27,17 @@ fun NewsScreen(
     val itemsPerPage = 20
     val scope = rememberCoroutineScope()
 
+    // Load top headlines when screen launches
     LaunchedEffect(Unit) {
         newsViewModel.getTopHeadlines()
     }
 
+    // Observe API response
     val newsResponse by newsViewModel.newsResponse.collectAsState()
-    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
+
+    // Observe Read Later articles from ViewModel
+    val readLaterArticles: List<Article> by newsViewModel.readLaterArticles
+        .collectAsState(initial = emptyList())
 
     val readLaterUrls = readLaterArticles.map { it.url }.toSet()
     val readLaterCount = readLaterArticles.size
@@ -39,7 +45,6 @@ fun NewsScreen(
     Column(modifier = Modifier.fillMaxSize()) {
 
         /* ---------------- TOP BAR ---------------- */
-
         Surface(
             modifier = Modifier.fillMaxWidth(),
             tonalElevation = 3.dp
@@ -51,7 +56,6 @@ fun NewsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -84,13 +88,11 @@ fun NewsScreen(
         }
 
         /* ---------------- CONTENT ---------------- */
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-
             newsResponse?.articles?.let { articles ->
                 val totalPages = (articles.size + itemsPerPage - 1) / itemsPerPage
                 val startIndex = currentPage * itemsPerPage

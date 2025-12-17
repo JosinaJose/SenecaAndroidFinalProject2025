@@ -3,13 +3,18 @@ package com.safemail.safemailapp.roomdatabase
 import com.safemail.safemailapp.dataModels.Article
 import kotlinx.coroutines.flow.Flow
 
+
 class ArticleRepository(private val dao: ArticleDAO) {
 
-    fun getAllArticles(): Flow<List<Article>> = dao.getAllArticles()
+    // Pass adminEmail to filter only relevant data
+    fun getAllArticles(adminEmail: String): Flow<List<Article>> =
+        dao.getAllArticles(adminEmail)
 
-    fun getFavoriteArticles(): Flow<List<Article>> = dao.getFavoriteArticles()
+    fun getFavoriteArticles(adminEmail: String): Flow<List<Article>> =
+        dao.getFavoriteArticles(adminEmail)
 
-    fun getReadLaterArticles(): Flow<List<Article>> = dao.getReadLaterArticles()
+    fun getReadLaterArticles(adminEmail: String): Flow<List<Article>> =
+        dao.getReadLaterArticles(adminEmail)
 
     suspend fun insertArticle(article: Article) = dao.insert(article)
 
@@ -17,9 +22,13 @@ class ArticleRepository(private val dao: ArticleDAO) {
 
     suspend fun deleteArticle(article: Article) = dao.deleteArticle(article)
 
-    suspend fun isArticleSaved(url: String): Boolean = dao.isArticleSaved(url)
+    // Check saved status specifically for this admin
+    suspend fun isArticleSaved(url: String, adminEmail: String): Boolean =
+        dao.isArticleSaved(url, adminEmail)
 
-    suspend fun isReadLater(url: String): Boolean = dao.isReadLater(url)
+    suspend fun getArticleByUrl(url: String, adminEmail: String): Article? =
+        dao.getArticleByUrl(url, adminEmail)
 
-    suspend fun getArticleByUrl(url: String): Article? = dao.getArticleByUrl(url)
+
+
 }

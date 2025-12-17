@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.safemail.safemailapp.dataModels.Article
 import kotlinx.coroutines.launch
 
 @Composable
@@ -18,14 +19,12 @@ fun ReadLaterScreen(
     newsViewModel: NewsViewModel = viewModel(),
     onNavigateBack: () -> Unit
 ) {
-    // Collect read later articles from Room database
-    val readLaterArticles by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
+    val readLaterArticles: List<Article> by newsViewModel.readLaterArticles.collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Custom Top Bar
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // Top Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.surface,
@@ -53,17 +52,13 @@ fun ReadLaterScreen(
 
         // Content
         if (readLaterArticles.isEmpty()) {
-            // Empty state
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "No saved articles",
                         style = MaterialTheme.typography.titleLarge,
@@ -78,7 +73,6 @@ fun ReadLaterScreen(
                 }
             }
         } else {
-            // List of saved articles
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -98,7 +92,7 @@ fun ReadLaterScreen(
                     items(readLaterArticles) { article ->
                         NewsItemCard(
                             article = article,
-                            isReadLater = true,  // Always true since we're in Read Later screen
+                            isReadLater = true,
                             onReadLaterClick = {
                                 scope.launch {
                                     newsViewModel.toggleReadLater(article)

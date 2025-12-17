@@ -46,7 +46,11 @@ fun HomeScreen(currentAdmin: MutableState<Admin?>) {
     // NewsViewModel setup
     val database = remember { ArticleDatabase.getDatabase(context) }
     val repository = remember { ArticleRepository(database.articleDao()) }
-    val newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory(repository))
+    val newsViewModel: NewsViewModel = currentAdmin.value?.email?.let { email ->
+        viewModel(factory = NewsViewModelFactory(repository, email))
+    } ?: error("Admin not logged in")
+
+
 
     Scaffold(
         bottomBar = { SafeMailBottomBar(navController) }
