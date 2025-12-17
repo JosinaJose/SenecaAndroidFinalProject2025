@@ -19,6 +19,7 @@ import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.ButtonComponent
 import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
+import com.safemail.safemailapp.components.PasswordTextField
 import com.safemail.safemailapp.components.TextButtons
 import com.safemail.safemailapp.dataModels.Admin
 
@@ -26,7 +27,7 @@ import com.safemail.safemailapp.dataModels.Admin
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
     onLoginSuccess: (admin: Admin) -> Unit = {},
-    onCreateAccountClick: () -> Unit = {}
+    onCreateAccountClick: () -> Unit = {},
 ) {
     val loginSuccess by viewModel.loginSuccess
     val currentAdmin by remember { derivedStateOf { viewModel.currentAdmin } }
@@ -65,10 +66,12 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Password field
-            AdminSignUpTextFields(
+            PasswordTextField(
                 labelValue = stringResource(R.string.passwordTxtFiled),
                 value = viewModel.passwordText,
-                onValueChange = { viewModel.passwordText = it }
+                onValueChange = { viewModel.passwordText = it}
+
+
             )
             Spacer(modifier = Modifier.height(24.dp))
 
