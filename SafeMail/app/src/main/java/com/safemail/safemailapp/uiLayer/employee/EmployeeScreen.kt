@@ -19,6 +19,7 @@ import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 @Composable
 fun EmployeeScreen(
     navController: NavHostController,
+    currentAdminCompany: String,
     viewModel: EmployeeViewModel = viewModel()
 ) {
     Column(
@@ -64,7 +65,7 @@ fun EmployeeScreen(
 
         // Generate button (only enabled when ready)
         Button(
-            onClick = { viewModel.generateCredentials() },
+            onClick = { viewModel.generateCredentials(currentAdminCompany) },
             enabled = viewModel.canGenerate(),
             modifier = Modifier.fillMaxWidth()
         ) {

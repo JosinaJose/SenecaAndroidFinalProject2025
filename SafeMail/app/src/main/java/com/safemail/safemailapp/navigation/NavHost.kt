@@ -4,15 +4,20 @@ package com.safemail.safemailapp.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.safemail.safemailapp.uiLayer.homePage.HomeScreen
 import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
 import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
 import com.safemail.safemailapp.uiLayer.splash.SplashScreen
 import com.safemail.safemailapp.dataModels.Admin
 import com.safemail.safemailapp.uiLayer.adminProfile.AdminInfoScreen
+import com.safemail.safemailapp.uiLayer.employee.EmployeeEditScreen
+import com.safemail.safemailapp.uiLayer.employee.EmployeeViewModel
 
 @Composable
 fun MyNavHost(navController: NavHostController) {
@@ -76,6 +81,25 @@ fun MyNavHost(navController: NavHostController) {
                 onAdminUpdate = { updatedAdmin -> currentAdmin.value = updatedAdmin }
             )
         }
+
+        composable(
+            route = "edit_employee/{employeeId}",
+            arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+            val employeeViewModel: EmployeeViewModel = viewModel()
+
+            val employee = employeeViewModel.employees.value.find { it.id == employeeId }
+            employee?.let {
+                EmployeeEditScreen(
+                    employee = it,
+                    employeeViewModel = employeeViewModel,
+                    navController = navController
+                )
+            }
+        }
+
+
 
     }
 }

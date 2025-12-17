@@ -5,6 +5,7 @@ import kotlinx.coroutines.tasks.await
 
 
 data class CloudEmpInfo(
+    val id: String = "",
     val empFirstname: String = "",
     val empLastName: String = "",
     val empPhoneNUmber: String = "",
@@ -60,6 +61,7 @@ suspend fun readEmployeeDataFromCloudDB(): List<CloudEmpInfo> {
         // Map each document to CloudEmpInfo
         snapshot.documents.map { doc ->
             CloudEmpInfo(
+                id = doc.id,
                 empFirstname = doc.getString("firstName") ?: "",
                 empLastName = doc.getString("lastName") ?: "",
                 empPhoneNUmber = doc.getString("phoneNumber") ?: "",
@@ -79,8 +81,35 @@ suspend fun readEmployeeDataFromCloudDB(): List<CloudEmpInfo> {
         emptyList()
     }
 }
+ //Update or Edit
 
-//delete
+    suspend fun updateEmployee(employeeId: String, updatedEmployee: CloudEmpInfo): Boolean {
+        val updatedData = hashMapOf(
+            "firstName" to updatedEmployee.empFirstname,
+            "lastName" to updatedEmployee.empLastName,
+            "phoneNumber" to updatedEmployee.empPhoneNUmber,
+            "department" to updatedEmployee.empDepartment,
+            "email" to updatedEmployee.empEmail,
+            "password" to updatedEmployee.empPassword,
+            "status" to when (updatedEmployee.empStatus) {
+                EmployeeStatus.ACTIVE -> "Active"
+                EmployeeStatus.INACTIVE -> "Inactive"
+            }
+        )
+
+        return try {
+            firestore.collection("EmployeeData")
+                .document(employeeId)
+                .set(updatedData)
+                .await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+
     // search
     // update
     //read

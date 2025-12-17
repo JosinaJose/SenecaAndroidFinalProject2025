@@ -10,15 +10,18 @@ import com.safemail.safemailapp.empClouddatabase.CloudEmpInfo
 import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 import kotlinx.coroutines.launch
 
-class EmployeeViewModel() : ViewModel() {
+class EmployeeViewModel : ViewModel() {
     val repository = CloudDatabaseRepo()
 
+    // Form fields
     var firstName = mutableStateOf("")
     var lastName = mutableStateOf("")
     var phoneNumber = mutableStateOf("")
     var department = mutableStateOf("")
 
-    var companyName = mutableStateOf("safemail") // can come from admin profile later
+    // Admin company name, dynamically set from screen
+    var companyName = mutableStateOf("")
+
     var email = mutableStateOf("")
     var password = mutableStateOf("")
     var employeeStatus = mutableStateOf(EmployeeStatus.ACTIVE)
@@ -27,6 +30,7 @@ class EmployeeViewModel() : ViewModel() {
     var employees = mutableStateOf(listOf<CloudEmpInfo>())
     var saveSuccess = mutableStateOf(false)
 
+    // Check if fields are filled before generating credentials
     fun canGenerate(): Boolean {
         return firstName.value.isNotBlank() &&
                 lastName.value.isNotBlank() &&
@@ -34,16 +38,20 @@ class EmployeeViewModel() : ViewModel() {
                 department.value.isNotBlank()
     }
 
-    // Generate email & password
-    fun generateCredentials() {
+    // Generate email & password using admin company
+    fun generateCredentials(adminCompanyName: String? = null) {
         if (!canGenerate()) return
 
-        val cleanCompany = companyName.value.lowercase().replace(" ", "")
-        email.value = "${firstName.value.lowercase()}.${lastName.value.lowercase()}@$cleanCompany.com"
+        val company = (adminCompanyName ?: companyName.value)
+            .lowercase()
+            .replace(" ", "")
+
+        email.value = "${firstName.value.lowercase()}.${lastName.value.lowercase()}@$company.com"
         password.value = generatePassword()
         isGenerated.value = true
     }
 
+    // Random password generator
     private fun generatePassword(): String {
         val chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#"
         return (1..10).map { chars.random() }.joinToString("")
@@ -51,7 +59,7 @@ class EmployeeViewModel() : ViewModel() {
 
     // Save employee to Firestore
     fun saveEmployee() {
-        if (!isGenerated.value || repository == null) return
+        if (!isGenerated.value) return
 
         val employee = CloudEmpInfo(
             empFirstname = firstName.value,
@@ -68,7 +76,7 @@ class EmployeeViewModel() : ViewModel() {
             saveSuccess.value = success
 
             if (success) {
-                // Optional: clear fields after save
+                // Clear fields
                 firstName.value = ""
                 lastName.value = ""
                 phoneNumber.value = ""
@@ -77,18 +85,17 @@ class EmployeeViewModel() : ViewModel() {
                 password.value = ""
                 isGenerated.value = false
 
-                // Reload employee list
+                // Reload employees
                 loadEmployees()
             }
         }
     }
 
+    // Load all employees from Firestore
     fun loadEmployees() {
-        if (repository == null) return
         viewModelScope.launch {
             val list = repository.getAllEmployees()
             employees.value = list
         }
     }
-
 }
