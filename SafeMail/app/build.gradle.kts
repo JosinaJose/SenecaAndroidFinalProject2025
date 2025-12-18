@@ -97,5 +97,7 @@ dependencies {
     //Fire store
     implementation("com.google.firebase:firebase-firestore")
 
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 
 }
