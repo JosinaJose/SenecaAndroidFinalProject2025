@@ -1,35 +1,17 @@
 package com.safemail.safemailapp.uiLayer.employee
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.safemail.safemailapp.empClouddatabase.CloudEmpInfo
 import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 import kotlinx.coroutines.launch
+import androidx.compose.material3.TopAppBar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,15 +27,19 @@ fun EmployeeEditScreen(
     var department by remember { mutableStateOf(employee.empDepartment) }
     var status by remember { mutableStateOf(employee.empStatus) }
 
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Edit Employee") })
+            TopAppBar(
+                title = { Text("Edit Employee") }
+            )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(paddingValues) // Use paddingValues from Scaffold
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -113,7 +99,6 @@ fun EmployeeEditScreen(
 
                 Button(
                     onClick = {
-                        // Create updated employee object
                         val updatedEmployee = employee.copy(
                             empFirstname = firstName,
                             empLastName = lastName,
@@ -122,12 +107,16 @@ fun EmployeeEditScreen(
                             empStatus = status
                         )
 
-                        // Call the update function
-                        employeeViewModel.viewModelScope.launch {
-                            val success = employeeViewModel.repository?.cloudService?.updateEmployee(employee.id, updatedEmployee)
-                            if (success == true) {
+                        scope.launch {
+                            // Use repository's cloudService to update
+                            val success = employeeViewModel.repository.cloudService.updateEmployee(
+                                employeeId = employee.id,
+                                updatedEmployee = updatedEmployee
+                            )
+
+                            if (success) {
                                 employeeViewModel.loadEmployees() // refresh list
-                                navController.popBackStack() // go back
+                                navController.popBackStack() // navigate back
                             }
                         }
                     }

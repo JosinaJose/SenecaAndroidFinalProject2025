@@ -9,19 +9,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.safemail.safemailapp.R
 import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.components.PasswordTextField
 import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
+
 @Composable
 fun EmployeeScreen(
     navController: NavHostController,
+    currentAdminEmail: String,
     currentAdminCompany: String,
-    viewModel: EmployeeViewModel = viewModel()
+    viewModel: EmployeeViewModel
 ) {
+    // Note: loadEmployees is usually called in HomeScreen, but keeping it here
+    // for safety ensures the local state is ready.
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,6 +35,9 @@ fun EmployeeScreen(
 
         NormalTextComponent(stringResource(R.string.add_emp))
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // First Name
         AdminSignUpTextFields(
             labelValue = stringResource(R.string.first_name),
             value = viewModel.firstName.value,
@@ -39,6 +46,7 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Last Name
         AdminSignUpTextFields(
             labelValue = stringResource(R.string.last_name),
             value = viewModel.lastName.value,
@@ -47,6 +55,7 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Phone
         AdminSignUpTextFields(
             labelValue = stringResource(R.string.phone_number),
             value = viewModel.phoneNumber.value,
@@ -55,6 +64,7 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Department
         AdminSignUpTextFields(
             labelValue = stringResource(R.string.department),
             value = viewModel.department.value,
@@ -63,25 +73,25 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Generate button (only enabled when ready)
+        // GENERATE BUTTON
+        // Logic: Checks canGenerate() then creates email@admindomain.com
         Button(
-            onClick = { viewModel.generateCredentials(currentAdminCompany) },
+            onClick = { viewModel.generateCredentials() },
             enabled = viewModel.canGenerate(),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Generate Email & Password")
         }
 
-        // Email + Password (shown only after generation)
+        // Show results only if generated
         if (viewModel.isGenerated.value) {
-
             Spacer(modifier = Modifier.height(16.dp))
 
             AdminSignUpTextFields(
                 labelValue = stringResource(R.string.emailTextFiled),
                 value = viewModel.email.value,
-                onValueChange = {}
-                //enabled = true
+                onValueChange = {},
+                // Read-only since it's auto-generated
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -89,8 +99,7 @@ fun EmployeeScreen(
             PasswordTextField(
                 labelValue = stringResource(R.string.passwordTxtFiled),
                 value = viewModel.password.value,
-                onValueChange = {},
-               // enabled = false
+                onValueChange = {}
             )
         }
 
@@ -116,22 +125,26 @@ fun EmployeeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // ACTION BUTTONS
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            OutlinedButton(onClick = {
-                navController.navigate("home")
-            }) {
+            OutlinedButton(
+                onClick = { navController.popBackStack() }
+            ) {
                 Text("Cancel")
             }
 
             Button(
-                onClick = { viewModel.saveEmployee() },
+                onClick = {
+                    viewModel.saveEmployee()
+                    // Optional: Navigate back to home list after save
+                    navController.popBackStack()
+                },
                 enabled = viewModel.isGenerated.value
             ) {
-                Text("Save")
+                Text("Save Employee")
             }
         }
     }

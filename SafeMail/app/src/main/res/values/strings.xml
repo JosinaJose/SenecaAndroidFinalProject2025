@@ -18,5 +18,6 @@
     <string name="news_page_heading">Top Headlines</string>
     <string name="department">Department</string>
     <string name="add_emp">Add Emplyee</string>
+    <string name="employee_list">Emplyee Directory</string>
 
 </resources>

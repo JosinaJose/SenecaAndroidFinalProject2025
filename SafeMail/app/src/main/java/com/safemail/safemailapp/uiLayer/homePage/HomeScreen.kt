@@ -13,16 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.dataModels.Admin
+import com.safemail.safemailapp.empClouddatabase.CloudDatabaseRepo
+import com.safemail.safemailapp.empClouddatabase.EmployeeViewModelFactory
 import com.safemail.safemailapp.navigation.NavItem
 import com.safemail.safemailapp.scaffold.SafeMailBottomBar
 import com.safemail.safemailapp.uiLayer.adminLogin.AdminProfileCircle
@@ -36,94 +37,115 @@ import com.safemail.safemailapp.uiLayer.newsPage.ReadLaterScreen
 import com.safemail.safemailapp.roomdatabase.ArticleDatabase
 import com.safemail.safemailapp.roomdatabase.ArticleRepository
 import com.safemail.safemailapp.roomdatabase.NewsViewModelFactory
-
+import com.safemail.safemailapp.R
 @Composable
 fun HomeScreen(currentAdmin: MutableState<Admin?>) {
-    val employeeViewModel: EmployeeViewModel = viewModel()
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // NewsViewModel setup
+    // Observe the current navigation route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val adminEmail = currentAdmin.value?.email ?: ""
+    val adminCompany = currentAdmin.value?.companyName ?: "safemail"
+
+    val employeeViewModel: EmployeeViewModel = viewModel(
+        factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
+    )
+
     val database = remember { ArticleDatabase.getDatabase(context) }
     val repository = remember { ArticleRepository(database.articleDao()) }
     val newsViewModel: NewsViewModel = currentAdmin.value?.email?.let { email ->
         viewModel(factory = NewsViewModelFactory(repository, email))
-    } ?: error("Admin not logged in")
-
-
+    } ?: return
 
     Scaffold(
         bottomBar = { SafeMailBottomBar(navController) }
     ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = "home",
+        // Use a Column so content stacks properly
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Home Dashboard
-            composable("home") {
-                HomeDashboard(
-                    currentAdmin = currentAdmin,
-                    employeeViewModel = employeeViewModel,
-                    navController = navController
-                )
+
+            // FIX: Only show the greeting if we are on the Home screen
+            // When navigating to "admin_info", this will disappear
+            if (currentRoute == "home") {
+                AdminGreeting(currentAdmin = currentAdmin, navController = navController)
             }
 
-            // Employee screen
-            composable("employees") {
-                EmployeeScreen(
-                    navController = navController,
-                    currentAdminCompany = currentAdmin.value?.companyName ?: "safemail"
-                )
-            }
-
-            // Edit employee screen
-            composable(
-                route = "edit_employee/{employeeId}",
-                arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
-                val employee = employeeViewModel.employees.value.find { it.id == employeeId }
-
-                employee?.let {
-                    EmployeeEditScreen(
-                        employee = it,
+            NavHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.weight(1f) // Takes up remaining space
+            ) {
+                // ---------------- HOME ----------------
+                composable("home") {
+                    LaunchedEffect(Unit) {
+                        employeeViewModel.loadEmployees()
+                    }
+                    EmployeeList(
                         employeeViewModel = employeeViewModel,
                         navController = navController
                     )
                 }
-            }
 
-            // News
-            composable(NavItem.News.route) {
-                NewsScreen(
-                    newsViewModel = newsViewModel,
-                    onNavigateBack = {
-                        navController.navigate("home") { popUpTo("home") { inclusive = false } }
-                    },
-                    onNavigateToReadLater = { navController.navigate("read_later") }
-                )
-            }
+                // ---------------- ADD EMPLOYEES ----------------
+                composable("employees") {
+                    EmployeeScreen(
+                        navController = navController,
+                        currentAdminEmail = adminEmail,
+                        currentAdminCompany = adminCompany,
+                        viewModel = employeeViewModel
+                    )
+                }
 
-            // Read later
-            composable("read_later") {
-                ReadLaterScreen(
-                    newsViewModel = newsViewModel,
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
+                // ---------------- EDIT EMPLOYEE ----------------
+                composable(
+                    route = "edit_employee/{employeeId}",
+                    arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+                    val employee = employeeViewModel.employees.value.find { it.id == employeeId }
 
-            // Admin info
-            composable("admin_info") {
-                currentAdmin.value?.let { admin ->
-                    AdminInfoScreen(
-                        admin = admin,
-                        onBack = { navController.popBackStack() },
-                        onAdminUpdate = { updatedAdmin ->
-                            currentAdmin.value = updatedAdmin
-                        }
+                    employee?.let {
+                        EmployeeEditScreen(
+                            employee = it,
+                            employeeViewModel = employeeViewModel,
+                            navController = navController
+                        )
+                    }
+                }
+
+                // ---------------- NEWS ----------------
+                composable(NavItem.News.route) {
+                    NewsScreen(
+                        newsViewModel = newsViewModel,
+                        onNavigateBack = { navController.navigate("home") },
+                        onNavigateToReadLater = { navController.navigate("read_later") }
+                    )
+                }
+
+                // ---------------- ADMIN INFO ----------------
+                composable("admin_info") {
+                    currentAdmin.value?.let { admin ->
+                        AdminInfoScreen(
+                            admin = admin,
+                            onBack = { navController.popBackStack() },
+                            onAdminUpdate = { updatedAdmin ->
+                                currentAdmin.value = updatedAdmin
+                            }
+                        )
+                    }
+                }
+
+                // ---------------- READ LATER ----------------
+                composable("read_later") {
+                    ReadLaterScreen(
+                        newsViewModel = newsViewModel,
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
             }
@@ -131,36 +153,14 @@ fun HomeScreen(currentAdmin: MutableState<Admin?>) {
     }
 }
 
-@Composable
-fun HomeDashboard(
-    currentAdmin: MutableState<Admin?>,
-    employeeViewModel: EmployeeViewModel,
-    navController: NavHostController
-) {
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        AdminGreeting(currentAdmin = currentAdmin, navController = navController)
-
-        LaunchedEffect(Unit) {
-            employeeViewModel.loadEmployees()
-        }
-
-        EmployeeList(
-            employeeViewModel = employeeViewModel,
-            navController = navController
-        )
-    }
-}
-
-// Admin greeting
 @Composable
 fun AdminGreeting(
     currentAdmin: MutableState<Admin?>,
     navController: NavHostController
 ) {
     currentAdmin.value?.let { admin ->
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // Center greeting
+        Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+            // Center Profile & Greeting
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -176,7 +176,7 @@ fun AdminGreeting(
                 )
             }
 
-            // Profile + Logout icons
+            // Top Right Actions
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -207,7 +207,6 @@ fun AdminGreeting(
     }
 }
 
-// Employee list
 @Composable
 fun EmployeeList(
     employeeViewModel: EmployeeViewModel,
@@ -216,46 +215,45 @@ fun EmployeeList(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 120.dp)
+            .padding(horizontal = 16.dp)
+            .padding(top = 125.dp) // Starts right after AdminGreeting
     ) {
-        NormalTextComponent("Employee List")
+        NormalTextComponent(stringResource(R.string.employee_list))
         Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(employeeViewModel.employees.value) { employee ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Row(
+        if (employeeViewModel.employees.value.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No employees found for your account.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(employeeViewModel.employees.value) { employee ->
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(2.dp)
                     ) {
-                        // Employee info
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Name: ${employee.empFirstname} ${employee.empLastName}")
-                            Text("Email: ${employee.empEmail}")
-                            Text("Department: ${employee.empDepartment}")
-                            Text("Phone: ${employee.empPhoneNUmber}")
-                            Text("Status: ${employee.empStatus}")
-                        }
-
-                        // Edit button
-                        IconButton(
-                            onClick = { navController.navigate("edit_employee/${employee.id}") }
+                        Row(
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Employee"
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "${employee.empFirstname} ${employee.empLastName}",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text("Email: ${employee.empEmail}", style = MaterialTheme.typography.bodySmall)
+                                Text("Dept: ${employee.empDepartment}", style = MaterialTheme.typography.bodySmall)
+                            }
+
+                            IconButton(onClick = { navController.navigate("edit_employee/${employee.id}") }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Divider()
                 }
             }
         }

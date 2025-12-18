@@ -1,7 +1,5 @@
 package com.safemail.safemailapp.uiLayer.employee
 
-
-
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,8 +8,10 @@ import com.safemail.safemailapp.empClouddatabase.CloudEmpInfo
 import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 import kotlinx.coroutines.launch
 
-class EmployeeViewModel : ViewModel() {
-    val repository = CloudDatabaseRepo()
+class EmployeeViewModel(
+    val repository: CloudDatabaseRepo,
+    private val adminEmail: String // Injected via Factory for data isolation
+) : ViewModel() {
 
     // Form fields
     var firstName = mutableStateOf("")
@@ -19,9 +19,7 @@ class EmployeeViewModel : ViewModel() {
     var phoneNumber = mutableStateOf("")
     var department = mutableStateOf("")
 
-    // Admin company name, dynamically set from screen
-    var companyName = mutableStateOf("")
-
+    // Generated credentials
     var email = mutableStateOf("")
     var password = mutableStateOf("")
     var employeeStatus = mutableStateOf(EmployeeStatus.ACTIVE)
@@ -30,7 +28,7 @@ class EmployeeViewModel : ViewModel() {
     var employees = mutableStateOf(listOf<CloudEmpInfo>())
     var saveSuccess = mutableStateOf(false)
 
-    // Check if fields are filled before generating credentials
+    // Check if form is complete before allowing generation
     fun canGenerate(): Boolean {
         return firstName.value.isNotBlank() &&
                 lastName.value.isNotBlank() &&
@@ -38,34 +36,51 @@ class EmployeeViewModel : ViewModel() {
                 department.value.isNotBlank()
     }
 
-    // Generate email & password using admin company
-    fun generateCredentials(adminCompanyName: String? = null) {
+    /**
+     * Auto-generates email and password using the admin's email domain.
+     * Logic: firstname.lastname@admindomain.com
+     */
+    fun generateCredentials() {
         if (!canGenerate()) return
 
-        val company = (adminCompanyName ?: companyName.value)
-            .lowercase()
-            .replace(" ", "")
+        // 1. Sanitize names: remove spaces and convert to lowercase
+        val cleanFirst = firstName.value.lowercase().replace("\\s".toRegex(), "")
+        val cleanLast = lastName.value.lowercase().replace("\\s".toRegex(), "")
 
-        email.value = "${firstName.value.lowercase()}.${lastName.value.lowercase()}@$company.com"
+        // 2. Extract domain from adminEmail (e.g., "tim@tims.com" -> "tims.com")
+        val domain = adminEmail.substringAfter("@")
+
+        // 3. Construct the email
+        email.value = "$cleanFirst.$cleanLast@$domain"
+
+        // 4. Generate random password
         password.value = generatePassword()
+
+        // 5. Allow the user to save
         isGenerated.value = true
     }
 
-    // Random password generator
     private fun generatePassword(): String {
         val chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#"
         return (1..10).map { chars.random() }.joinToString("")
     }
 
-    // Save employee to Firestore
+    fun loadEmployees() {
+        viewModelScope.launch {
+            val list = repository.getAllEmployees(adminEmail)
+            employees.value = list
+        }
+    }
+
     fun saveEmployee() {
         if (!isGenerated.value) return
 
         val employee = CloudEmpInfo(
-            empFirstname = firstName.value,
-            empLastName = lastName.value,
-            empPhoneNUmber = phoneNumber.value,
-            empDepartment = department.value,
+            adminEmail = adminEmail,
+            empFirstname = firstName.value.trim(),
+            empLastName = lastName.value.trim(),
+            empPhoneNUmber = phoneNumber.value.trim(),
+            empDepartment = department.value.trim(),
             empEmail = email.value,
             empPassword = password.value,
             empStatus = employeeStatus.value
@@ -74,28 +89,21 @@ class EmployeeViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.addEmployee(employee)
             saveSuccess.value = success
-
             if (success) {
-                // Clear fields
-                firstName.value = ""
-                lastName.value = ""
-                phoneNumber.value = ""
-                department.value = ""
-                email.value = ""
-                password.value = ""
-                isGenerated.value = false
-
-                // Reload employees
+                clearFields()
                 loadEmployees()
             }
         }
     }
 
-    // Load all employees from Firestore
-    fun loadEmployees() {
-        viewModelScope.launch {
-            val list = repository.getAllEmployees()
-            employees.value = list
-        }
+    private fun clearFields() {
+        firstName.value = ""
+        lastName.value = ""
+        phoneNumber.value = ""
+        department.value = ""
+        email.value = ""
+        password.value = ""
+        employeeStatus.value = EmployeeStatus.ACTIVE
+        isGenerated.value = false
     }
 }

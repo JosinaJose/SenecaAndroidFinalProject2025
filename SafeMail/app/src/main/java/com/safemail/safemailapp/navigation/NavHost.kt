@@ -15,9 +15,12 @@ import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
 import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
 import com.safemail.safemailapp.uiLayer.splash.SplashScreen
 import com.safemail.safemailapp.dataModels.Admin
+import com.safemail.safemailapp.empClouddatabase.CloudDatabaseRepo
+import com.safemail.safemailapp.empClouddatabase.EmployeeViewModelFactory
 import com.safemail.safemailapp.uiLayer.adminProfile.AdminInfoScreen
-import com.safemail.safemailapp.uiLayer.employee.EmployeeEditScreen
+
 import com.safemail.safemailapp.uiLayer.employee.EmployeeViewModel
+import com.safemail.safemailapp.uiLayer.homePage.EmployeeList
 
 @Composable
 fun MyNavHost(navController: NavHostController) {
@@ -82,22 +85,20 @@ fun MyNavHost(navController: NavHostController) {
             )
         }
 
-        composable(
-            route = "edit_employee/{employeeId}",
-            arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
-            val employeeViewModel: EmployeeViewModel = viewModel()
+        composable("employees") {
+            val adminEmail = currentAdmin.value?.email ?: ""
+            val adminCompany = currentAdmin.value?.companyName ?: "safemail"
 
-            val employee = employeeViewModel.employees.value.find { it.id == employeeId }
-            employee?.let {
-                EmployeeEditScreen(
-                    employee = it,
-                    employeeViewModel = employeeViewModel,
-                    navController = navController
-                )
-            }
+            val employeeViewModel: EmployeeViewModel = viewModel(
+                factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
+            )
+
+            EmployeeList(
+                employeeViewModel = employeeViewModel,
+                navController = navController
+            )
         }
+
 
 
 
