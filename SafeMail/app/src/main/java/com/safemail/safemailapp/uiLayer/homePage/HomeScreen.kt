@@ -9,12 +9,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,17 +46,48 @@ import com.safemail.safemailapp.roomdatabase.ArticleDatabase
 import com.safemail.safemailapp.roomdatabase.ArticleRepository
 import com.safemail.safemailapp.roomdatabase.NewsViewModelFactory
 import com.safemail.safemailapp.R
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
+val AdminSaver = Saver<Admin?, Map<String, Any?>>( // Changed Admin to Admin?
+    save = { admin ->
+        if (admin == null) null // Return null if there is no admin to save
+        else mapOf(
+            "id" to admin.id,
+            "comp" to admin.companyName,
+            "fname" to admin.firstName,
+            "lname" to admin.lastName,
+            "phone" to admin.phoneNumber,
+            "email" to admin.email
+        )
+    },
+    restore = { map ->
+        // If the map exists, recreate the Admin, otherwise return null
+        if (map.isEmpty()) null
+        else Admin(
+            id = map["id"] as Int,
+            companyName = map["comp"] as String,
+            firstName = map["fname"] as String,
+            lastName = map["lname"] as String,
+            phoneNumber = map["phone"] as String,
+            email = map["email"] as String
+        )
+    }
+)
 @Composable
-fun HomeScreen(currentAdmin: MutableState<Admin?>) {
+fun HomeScreen(initialAdmin: Admin?) {
+    var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
+        mutableStateOf<Admin?>(initialAdmin)
+    }
+
     val navController = rememberNavController()
     val context = LocalContext.current
-
-    // Observe the current navigation route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val adminEmail = currentAdmin.value?.email ?: ""
-    val adminCompany = currentAdmin.value?.companyName ?: "safemail"
+    val adminEmail = currentAdmin?.email ?: ""
+    val adminCompany = currentAdmin?.companyName ?: "safemail"
 
     val employeeViewModel: EmployeeViewModel = viewModel(
         factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
@@ -62,211 +95,172 @@ fun HomeScreen(currentAdmin: MutableState<Admin?>) {
 
     val database = remember { ArticleDatabase.getDatabase(context) }
     val repository = remember { ArticleRepository(database.articleDao()) }
-    val newsViewModel: NewsViewModel = currentAdmin.value?.email?.let { email ->
-        viewModel(factory = NewsViewModelFactory(repository, email))
-    } ?: return
+    val newsViewModel: NewsViewModel? = if (adminEmail.isNotEmpty()) {
+        viewModel(factory = NewsViewModelFactory(repository, adminEmail))
+    } else null
 
     Scaffold(
         bottomBar = { SafeMailBottomBar(navController) }
     ) { paddingValues ->
-        // Use a Column so content stacks properly
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-
-            // FIX: Only show the greeting if we are on the Home screen
-            // When navigating to "admin_info", this will disappear
-            if (currentRoute == "home") {
-                AdminGreeting(currentAdmin = currentAdmin, navController = navController)
-            }
-            OutlookConnectionStatus()
-            SlackConnectionStatus()
-
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             NavHost(
                 navController = navController,
                 startDestination = "home",
-                modifier = Modifier.weight(1f) // Takes up remaining space
+                modifier = Modifier.fillMaxSize()
             ) {
-                // ---------------- HOME ----------------
                 composable("home") {
-                    LaunchedEffect(Unit) {
-                        employeeViewModel.loadEmployees()
+                    LaunchedEffect(adminEmail) {
+                        if (adminEmail.isNotEmpty()) employeeViewModel.loadEmployees()
                     }
+
+                    // PASS currentAdmin to the list so it can render the header items
                     EmployeeList(
                         employeeViewModel = employeeViewModel,
-                        navController = navController
-                    )
-                }
-
-                // ---------------- ADD EMPLOYEES ----------------
-                composable("employees") {
-                    EmployeeScreen(
                         navController = navController,
-                        currentAdminEmail = adminEmail,
-                        currentAdminCompany = adminCompany,
-                        viewModel = employeeViewModel
+                        admin = currentAdmin,
+                        onLogout = {
+                            currentAdmin = null
+                            // Navigate back to the very start (Login)
+                            navController.navigate("login") { popUpTo(0) }
+                        }
                     )
                 }
 
-                // ---------------- EDIT EMPLOYEE ----------------
+                composable("employees") {
+                    EmployeeScreen(navController, adminEmail, adminCompany, employeeViewModel)
+                }
+
                 composable(
                     route = "edit_employee/{employeeId}",
                     arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
-                    val employee = employeeViewModel.employees.value.find { it.id == employeeId }
+                    val id = backStackEntry.arguments?.getString("employeeId") ?: ""
+                    val emp = employeeViewModel.employees.value.find { it.id == id }
+                    emp?.let { EmployeeEditScreen(it, employeeViewModel, navController) }
+                }
 
-                    employee?.let {
-                        EmployeeEditScreen(
-                            employee = it,
-                            employeeViewModel = employeeViewModel,
-                            navController = navController
-                        )
+                composable(NavItem.News.route) {
+                    newsViewModel?.let {
+                        NewsScreen(it, { navController.navigate("home") }, { navController.navigate("read_later") })
                     }
                 }
 
-                // ---------------- NEWS ----------------
-                composable(NavItem.News.route) {
-                    NewsScreen(
-                        newsViewModel = newsViewModel,
-                        onNavigateBack = { navController.navigate("home") },
-                        onNavigateToReadLater = { navController.navigate("read_later") }
-                    )
-                }
-
-                // ---------------- ADMIN INFO ----------------
                 composable("admin_info") {
-                    currentAdmin.value?.let { admin ->
+                    currentAdmin?.let { admin ->
                         AdminInfoScreen(
                             admin = admin,
                             onBack = { navController.popBackStack() },
-                            onAdminUpdate = { updatedAdmin ->
-                                currentAdmin.value = updatedAdmin
-                            }
+                            onAdminUpdate = { updatedAdmin -> currentAdmin = updatedAdmin }
                         )
                     }
                 }
 
-                // ---------------- READ LATER ----------------
                 composable("read_later") {
-                    ReadLaterScreen(
-                        newsViewModel = newsViewModel,
-                        onNavigateBack = { navController.popBackStack() }
-                    )
+                    newsViewModel?.let {
+                        ReadLaterScreen(it) { navController.popBackStack() }
+                    }
                 }
             }
         }
     }
 }
-
 @Composable
 fun AdminGreeting(
-    currentAdmin: MutableState<Admin?>,
-    navController: NavHostController
+    admin: Admin?,
+    onLogout: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
-    currentAdmin.value?.let { admin ->
+    admin?.let {
         Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-            // Center Profile & Greeting
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp)
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp)
             ) {
-                AdminProfileCircle(admin)
+                AdminProfileCircle(it)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Welcome, ${admin.firstName}!",
-                    color = Color.Black,
+                    text = "Welcome, ${it.firstName}!",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
 
-
-
-            // Top Right Actions
             Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 16.dp, end = 16.dp),
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                IconButton(onClick = { navController.navigate("admin_info") }) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.Black
-                    )
+                IconButton(onClick = onProfileClick) {
+                    Icon(Icons.Default.Person, contentDescription = "Profile")
                 }
-
-                IconButton(onClick = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.ExitToApp,
-                        contentDescription = "Logout",
-                        tint = Color.Red
-                    )
+                IconButton(onClick = onLogout) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = Color.Red)
                 }
             }
         }
     }
 }
-
 @Composable
 fun EmployeeList(
     employeeViewModel: EmployeeViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    admin: Admin?,
+    onLogout: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .padding(top = 125.dp) // Starts right after AdminGreeting
-    ) {
-        NormalTextComponent(stringResource(R.string.employee_list))
-        Spacer(modifier = Modifier.height(12.dp))
+    val employees by employeeViewModel.employees // Assuming this is a State
 
-        if (employeeViewModel.employees.value.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No employees found for your account.", color = Color.Gray)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // HEADER SECTION: Now part of the scrollable list
+        item {
+            AdminGreeting(
+                admin = admin,
+                onLogout = onLogout,
+                onProfileClick = { navController.navigate("admin_info") }
+            )
+        }
+        item { OutlookConnectionStatus() }
+        item { SlackConnectionStatus() }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            NormalTextComponent(stringResource(R.string.employee_list))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // LIST SECTION
+        if (employees.isEmpty()) {
+            item {
+                Box(modifier = Modifier.fillMaxWidth().padding(top = 50.dp), contentAlignment = Alignment.Center) {
+                    Text("No employees found.", color = Color.Gray)
+                }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(employeeViewModel.employees.value) { employee ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(2.dp)
+            items(employees) { employee ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "${employee.empFirstname} ${employee.empLastName}",
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text("Email: ${employee.empEmail}", style = MaterialTheme.typography.bodySmall)
-                                Text("Dept: ${employee.empDepartment}", style = MaterialTheme.typography.bodySmall)
-                            }
-
-                            IconButton(onClick = { navController.navigate("edit_employee/${employee.id}") }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
-                            }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("${employee.empFirstname} ${employee.empLastName}", style = MaterialTheme.typography.titleSmall)
+                            Text("Email: ${employee.empEmail}", style = MaterialTheme.typography.bodySmall)
+                            Text("Dept: ${employee.empDepartment}", style = MaterialTheme.typography.bodySmall)
+                        }
+                        IconButton(onClick = { navController.navigate("edit_employee/${employee.id}") }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
             }
         }
+
+        // Final bottom spacing
+        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 @Composable

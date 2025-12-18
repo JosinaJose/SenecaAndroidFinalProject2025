@@ -11,4 +11,8 @@ class CloudDatabaseRepo() {
     suspend fun getAllEmployees(adminEmail: String): List<CloudEmpInfo> {
         return cloudService.readEmployeeDataFromCloudDB(adminEmail)
     }
+
+    suspend fun updateEmployee(employeeId: String, updatedEmployee: CloudEmpInfo): Boolean {
+        return cloudService.updateEmployee(employeeId, updatedEmployee)
+    }
 }

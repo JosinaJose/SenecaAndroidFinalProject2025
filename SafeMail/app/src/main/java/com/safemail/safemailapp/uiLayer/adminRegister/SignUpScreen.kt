@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.uiLayer.adminRegister.SignUpViewModel
@@ -30,6 +29,7 @@ import com.safemail.safemailapp.R
 import com.safemail.safemailapp.components.ButtonComponent
 import com.safemail.safemailapp.components.PasswordTextField
 import com.safemail.safemailapp.components.TextButtons
+import com.safemail.safemailapp.components.TextFields
 
 
 @Composable
@@ -77,31 +77,31 @@ fun SignupScreen(
             }
 
             // Form fields using string resources
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.company_name),
                 value = viewModel.companyName,
                 onValueChange = { viewModel.companyName = it }
             )
 
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.first_name),
                 value = viewModel.firstName,
                 onValueChange = { viewModel.firstName = it }
             )
 
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.last_name),
                 value = viewModel.lastName,
                 onValueChange = { viewModel.lastName = it }
             )
 
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.phone_number),
                 value = viewModel.phoneNumber,
                 onValueChange = { viewModel.phoneNumber = it }
             )
 
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.emailTextFiled),
                 value = viewModel.email,
                 onValueChange = { viewModel.email = it }

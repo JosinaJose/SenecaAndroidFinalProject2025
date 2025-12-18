@@ -59,7 +59,7 @@ fun HeadingTextComponent(value: String) {
 }
 
 @Composable
-fun AdminSignUpTextFields(
+fun TextFields(
     labelValue: String,
     value: String,
     onValueChange: (String) -> Unit

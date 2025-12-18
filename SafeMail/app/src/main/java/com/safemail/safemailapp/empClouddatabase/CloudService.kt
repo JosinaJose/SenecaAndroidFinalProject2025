@@ -1,5 +1,6 @@
 package com.safemail.safemailapp.empClouddatabase
 
+
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -10,7 +11,10 @@ data class CloudEmpInfo(
     val empFirstname: String = "",
     val empLastName: String = "",
     val empPhoneNUmber: String = "",
+    val personalEmailAddress: String ="",
     val empDepartment: String = "",
+    val joiningDate: String = "",
+    val resignedDate: String = "",
     val empEmail: String = "",
     val empPassword: String = "",
     val empStatus: EmployeeStatus = EmployeeStatus.ACTIVE,
@@ -31,7 +35,10 @@ class CloudService() {
             "firstName" to employee.empFirstname,
             "lastName" to employee.empLastName,
             "phoneNumber" to employee.empPhoneNUmber,
+            "personalEmailAddress" to employee.personalEmailAddress,
             "department" to employee.empDepartment,
+            "joiningDate" to employee.joiningDate,
+            "resignedDate" to employee.resignedDate,
             "email" to employee.empEmail,
             "password" to employee.empPassword,
             "status" to if (employee.empStatus == EmployeeStatus.ACTIVE) "Active" else "Inactive"
@@ -58,7 +65,10 @@ class CloudService() {
                     empFirstname = doc.getString("firstName") ?: "",
                     empLastName = doc.getString("lastName") ?: "",
                     empPhoneNUmber = doc.getString("phoneNumber") ?: "",
+                    personalEmailAddress = doc.getString("personalEmailAddress") ?: "",
                     empDepartment = doc.getString("department") ?: "",
+                    joiningDate = doc.getString("joiningDate") ?: "",
+                    resignedDate = doc.getString("resignedDate") ?: "",
                     empEmail = doc.getString("email") ?: "",
                     empStatus = if (doc.getString("status") == "Active") EmployeeStatus.ACTIVE else EmployeeStatus.INACTIVE
                 )
@@ -72,7 +82,9 @@ class CloudService() {
                 "firstName" to updatedEmployee.empFirstname,
                 "lastName" to updatedEmployee.empLastName,
                 "phoneNumber" to updatedEmployee.empPhoneNUmber,
+                "personalEmailAddress" to updatedEmployee.personalEmailAddress,
                 "department" to updatedEmployee.empDepartment,
+                "resignedDate" to updatedEmployee.resignedDate,
                 "email" to updatedEmployee.empEmail,
                 "status" to if (updatedEmployee.empStatus == EmployeeStatus.ACTIVE) "Active" else "Inactive"
             )
@@ -88,7 +100,7 @@ class CloudService() {
     }
 
 }
-    // search
-    // update
-    //read
+// search
+// update
+//read
 

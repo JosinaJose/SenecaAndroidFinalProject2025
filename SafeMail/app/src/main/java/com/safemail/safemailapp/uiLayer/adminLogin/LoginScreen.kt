@@ -15,12 +15,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.R
-import com.safemail.safemailapp.components.AdminSignUpTextFields
 import com.safemail.safemailapp.components.ButtonComponent
 import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.components.PasswordTextField
 import com.safemail.safemailapp.components.TextButtons
+import com.safemail.safemailapp.components.TextFields
 import com.safemail.safemailapp.dataModels.Admin
 
 @Composable
@@ -58,7 +58,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Email field
-            AdminSignUpTextFields(
+            TextFields(
                 labelValue = stringResource(R.string.emailTextFiled),
                 value = viewModel.emailText,
                 onValueChange = { viewModel.emailText = it }

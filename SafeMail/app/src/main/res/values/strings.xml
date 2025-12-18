@@ -19,5 +19,7 @@
     <string name="department">Department</string>
     <string name="add_emp">Add Emplyee</string>
     <string name="employee_list">Emplyee Directory</string>
+    <string name="personal_email">Personal Email Address</string>
+    <string name="joining_date">Joining Date</string>
 
 </resources>

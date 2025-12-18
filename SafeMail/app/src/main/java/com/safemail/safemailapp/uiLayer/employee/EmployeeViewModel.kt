@@ -9,15 +9,17 @@ import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 import kotlinx.coroutines.launch
 
 class EmployeeViewModel(
-    val repository: CloudDatabaseRepo,
-    private val adminEmail: String // Injected via Factory for data isolation
+    private val repository: CloudDatabaseRepo,
+    private val adminEmail: String // Injected via Factory
 ) : ViewModel() {
 
     // Form fields
     var firstName = mutableStateOf("")
     var lastName = mutableStateOf("")
     var phoneNumber = mutableStateOf("")
+    var personalEmailAddress = mutableStateOf("")
     var department = mutableStateOf("")
+    var joiningDate = mutableStateOf("")
 
     // Generated credentials
     var email = mutableStateOf("")
@@ -28,35 +30,20 @@ class EmployeeViewModel(
     var employees = mutableStateOf(listOf<CloudEmpInfo>())
     var saveSuccess = mutableStateOf(false)
 
-    // Check if form is complete before allowing generation
-    fun canGenerate(): Boolean {
-        return firstName.value.isNotBlank() &&
-                lastName.value.isNotBlank() &&
-                phoneNumber.value.isNotBlank() &&
-                department.value.isNotBlank()
-    }
+    fun canGenerate(): Boolean = firstName.value.isNotBlank() &&
+            lastName.value.isNotBlank() &&
+            phoneNumber.value.isNotBlank() &&
+            department.value.isNotBlank() &&
+            joiningDate.value.isNotBlank() &&
+            personalEmailAddress.value.isNotBlank()
 
-    /**
-     * Auto-generates email and password using the admin's email domain.
-     * Logic: firstname.lastname@admindomain.com
-     */
     fun generateCredentials() {
         if (!canGenerate()) return
-
-        // 1. Sanitize names: remove spaces and convert to lowercase
         val cleanFirst = firstName.value.lowercase().replace("\\s".toRegex(), "")
         val cleanLast = lastName.value.lowercase().replace("\\s".toRegex(), "")
-
-        // 2. Extract domain from adminEmail (e.g., "tim@tims.com" -> "tims.com")
         val domain = adminEmail.substringAfter("@")
-
-        // 3. Construct the email
         email.value = "$cleanFirst.$cleanLast@$domain"
-
-        // 4. Generate random password
         password.value = generatePassword()
-
-        // 5. Allow the user to save
         isGenerated.value = true
     }
 
@@ -80,7 +67,10 @@ class EmployeeViewModel(
             empFirstname = firstName.value.trim(),
             empLastName = lastName.value.trim(),
             empPhoneNUmber = phoneNumber.value.trim(),
+            personalEmailAddress = personalEmailAddress.value.trim(),
             empDepartment = department.value.trim(),
+            joiningDate = joiningDate.value.trim(),
+            resignedDate = "",
             empEmail = email.value,
             empPassword = password.value,
             empStatus = employeeStatus.value
@@ -95,12 +85,20 @@ class EmployeeViewModel(
             }
         }
     }
-
+    fun updateEmployee(employeeId: String, updatedEmployee: CloudEmpInfo, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.updateEmployee(employeeId, updatedEmployee)
+            if (success) loadEmployees()
+            onComplete(success)
+        }
+    }
     private fun clearFields() {
         firstName.value = ""
         lastName.value = ""
         phoneNumber.value = ""
+        personalEmailAddress.value = ""
         department.value = ""
+        joiningDate.value = ""
         email.value = ""
         password.value = ""
         employeeStatus.value = EmployeeStatus.ACTIVE
