@@ -1,8 +1,14 @@
 package com.safemail.safemailapp.uiLayer.homePage
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
@@ -75,6 +81,8 @@ fun HomeScreen(currentAdmin: MutableState<Admin?>) {
             if (currentRoute == "home") {
                 AdminGreeting(currentAdmin = currentAdmin, navController = navController)
             }
+            OutlookConnectionStatus()
+            SlackConnectionStatus()
 
             NavHost(
                 navController = navController,
@@ -176,6 +184,8 @@ fun AdminGreeting(
                 )
             }
 
+
+
             // Top Right Actions
             Row(
                 modifier = Modifier
@@ -256,6 +266,93 @@ fun EmployeeList(
                     }
                 }
             }
+        }
+    }
+}
+@Composable
+fun OutlookConnectionStatus() {
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+
+    // Check if Outlook app is installed
+    val isOutlookInstalled = remember {
+        try {
+            packageManager.getPackageInfo("com.microsoft.office.outlook", 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp) // Matches common list padding
+            .clickable {
+                if (isOutlookInstalled) {
+                    val intent = packageManager.getLaunchIntentForPackage("com.microsoft.office.outlook")
+                    context.startActivity(intent)
+                } else {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://outlook.office.com"))
+                    context.startActivity(browserIntent)
+                }
+            },
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isOutlookInstalled) Color(0xFFE3F2FD) else Color(0xFFF5F5F5)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 10.dp) // Thinner, cleaner look
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            // Indicator Light
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(if (isOutlookInstalled) Color(0xFF4CAF50) else Color.Gray, CircleShape)
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = if (isOutlookInstalled) "Outlook Connected" else "Outlook Not Linked",
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isOutlookInstalled) Color(0xFF1976D2) else Color.DarkGray
+            )
+        }
+    }
+}
+@Composable
+fun SlackConnectionStatus() {
+    val context = LocalContext.current
+    val isSlackInstalled = remember {
+        try {
+            context.packageManager.getPackageInfo("com.Slack", 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable {
+                val intent = context.packageManager.getLaunchIntentForPackage("com.Slack")
+                if (intent != null) context.startActivity(intent)
+                else context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://slack.com/signin")))
+            },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F2)) // Slack-style off-white
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(10.dp).background(if (isSlackInstalled) Color(0xFF4A154B) else Color.Gray, CircleShape))
+            Spacer(modifier = Modifier.width(10.dp))
+            Text("Slack ${if (isSlackInstalled) "Connected" else "Not Linked"}", color = Color.Black)
         }
     }
 }
