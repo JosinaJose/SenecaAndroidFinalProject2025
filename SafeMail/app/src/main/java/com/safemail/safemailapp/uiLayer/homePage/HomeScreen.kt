@@ -170,34 +170,58 @@ fun AdminGreeting(
     onLogout: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    admin?.let {
-        Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp)
-            ) {
-                AdminProfileCircle(it)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Welcome, ${it.firstName}!",
-                    style = MaterialTheme.typography.titleMedium
+    admin ?: return
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+    ) {
+
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            IconButton(onClick = onProfileClick) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Row(
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                IconButton(onClick = onProfileClick) {
-                    Icon(Icons.Default.Person, contentDescription = "Profile")
-                }
-                IconButton(onClick = onLogout) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = Color.Red)
-                }
+            IconButton(onClick = onLogout) {
+                Icon(
+                    Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
+        }
+
+        //  Center greeting content
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AdminProfileCircle(admin)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Welcome, ${admin.firstName}!",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
+
 @Composable
 fun EmployeeList(
     employeeViewModel: EmployeeViewModel,

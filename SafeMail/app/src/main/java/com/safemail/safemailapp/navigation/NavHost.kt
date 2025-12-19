@@ -85,7 +85,7 @@ fun MyNavHost(navController: NavHostController) {
                 factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
             )
 
-           
+
         }
     }
 }

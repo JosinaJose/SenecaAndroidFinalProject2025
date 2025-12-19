@@ -11,6 +11,7 @@ interface NewsAPI {
     suspend fun getHeadLines(
         @Query("country") countryCode: String = "us",
         @Query("page") pageNumber: Int = 1,
+        @Query("category") category: String? = null,
         @Query("apiKey") apiKey: String = Constants.Companion.NEWS_API_KEY
     ): Response<NewsResponse>
 

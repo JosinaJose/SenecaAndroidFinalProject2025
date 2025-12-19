@@ -20,6 +20,8 @@ class NewsViewModel(
 
     val articles: StateFlow<List<Article>> = repository.getAllArticles(adminEmail)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private val _currentCategory = MutableStateFlow<String?>(null)
+    val currentCategory: StateFlow<String?> = _currentCategory.asStateFlow()
 
     // Public Read Later articles
     val readLaterArticles: StateFlow<List<Article>> = repository.getReadLaterArticles(adminEmail)
@@ -81,7 +83,25 @@ class NewsViewModel(
         }
     }
 
+    fun getTopHeadlines(category: String? = null, page: Int = 1, countryCode: String = "us") {
+        viewModelScope.launch {
+            try {
+                val response: Response<NewsResponse> =
+                    RetrofitInstance.newsApi.getHeadLines(
+                        countryCode = countryCode,
+                        pageNumber = page,
+                        category = category // Pass the category to the API
+                    )
+                if (response.isSuccessful) {
+                    _newsResponse.value = response.body()
+                }
+            } catch (e: Exception) {
+                Log.e("NewsAPI", "Failed to load headlines", e)
+            }
+        }
+    }
     fun searchNews(query: String, page: Int = 1) {
+        if (query.isEmpty()) return
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.newsApi.searchForNews(query, page)
