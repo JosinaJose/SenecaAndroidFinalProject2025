@@ -1,19 +1,17 @@
-package com.safemail.safemailapp.roomdatabase
+package com.safemail.safemailapp.newsLocalDb
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-
 import androidx.room.Query
 import androidx.room.Update
-
-import com.safemail.safemailapp.dataModels.Article
 import kotlinx.coroutines.flow.Flow
+
 @Dao
 interface ArticleDAO {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insert(article: Article): Long
 
     @Update

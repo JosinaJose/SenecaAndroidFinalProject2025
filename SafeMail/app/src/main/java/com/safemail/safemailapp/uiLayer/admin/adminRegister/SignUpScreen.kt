@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.uiLayer.adminRegister
+package com.safemail.safemailapp.uiLayer.admin.adminRegister
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.components.HeadingTextComponent
 import com.safemail.safemailapp.components.NormalTextComponent
-import com.safemail.safemailapp.uiLayer.adminRegister.SignUpViewModel
 import com.safemail.safemailapp.R
 import com.safemail.safemailapp.components.ButtonComponent
 import com.safemail.safemailapp.components.PasswordTextField

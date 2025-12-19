@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.roomdatabase
+package com.safemail.safemailapp.newsLocalDb
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

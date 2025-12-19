@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -17,7 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.safemail.safemailapp.dataModels.Article
+import com.safemail.safemailapp.newsLocalDb.Article
 
 @Composable
 fun NewsItemCard(
@@ -38,7 +39,8 @@ fun NewsItemCard(
                     context.startActivity(intent)
                 }
             },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -51,25 +53,17 @@ fun NewsItemCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Text(
-                    text = article.title ?: "",
+                    text = article.title ?: "No Title",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2
                 )
 
-                IconButton(
-                    onClick = onReadLaterClick,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isReadLater) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                        contentDescription = if (isReadLater) "Remove from Read Later" else "Add to Read Later",
-                        tint = if (isReadLater) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
+                // --- SINGLE ACTION AREA ---
+                // If onDeleteClick is provided, we treat this as a "Read Later" management card
                 if (onDeleteClick != null) {
                     IconButton(
-                        onClick = { onDeleteClick() },
+                        onClick = onDeleteClick,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
@@ -78,21 +72,20 @@ fun NewsItemCard(
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
-                }
-                onDeleteClick?.let {
+                } else {
+                    // Otherwise, show the Bookmark toggle for the main news feed
                     IconButton(
-                        onClick = it,
+                        onClick = onReadLaterClick,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Delete from Read Later",
-                            tint = MaterialTheme.colorScheme.error
+                            imageVector = if (isReadLater) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                            contentDescription = if (isReadLater) "Saved" else "Save for later",
+                            tint = if (isReadLater) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             }
-
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -100,20 +93,26 @@ fun NewsItemCard(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             article.urlToImage?.let { imageUrl ->
-                Image(
-                    painter = rememberAsyncImagePainter(imageUrl),
-                    contentDescription = article.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentScale = ContentScale.Crop
-                )
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUrl),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
             article.source?.name?.let { sourceName ->

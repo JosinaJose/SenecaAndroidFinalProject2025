@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.uiLayer.adminLogin
+package com.safemail.safemailapp.uiLayer.admin.adminLogin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

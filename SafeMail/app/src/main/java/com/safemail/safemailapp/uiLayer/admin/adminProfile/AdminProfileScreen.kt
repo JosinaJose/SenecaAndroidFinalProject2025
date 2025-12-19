@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.uiLayer.adminProfile
+package com.safemail.safemailapp.uiLayer.admin.adminProfile
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement

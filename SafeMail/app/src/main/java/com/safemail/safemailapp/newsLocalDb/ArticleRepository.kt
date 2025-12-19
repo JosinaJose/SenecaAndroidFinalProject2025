@@ -1,8 +1,6 @@
-package com.safemail.safemailapp.roomdatabase
+package com.safemail.safemailapp.newsLocalDb
 
-import com.safemail.safemailapp.dataModels.Article
 import kotlinx.coroutines.flow.Flow
-
 
 class ArticleRepository(private val dao: ArticleDAO) {
 

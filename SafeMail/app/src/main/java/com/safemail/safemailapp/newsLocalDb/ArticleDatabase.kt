@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.roomdatabase
+package com.safemail.safemailapp.newsLocalDb
 
 import android.content.Context
 import androidx.room.Database
@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.safemail.safemailapp.dataModels.Article
 
 @Database(
     entities = [Article::class],

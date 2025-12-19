@@ -1,7 +1,6 @@
-package com.safemail.safemailapp.roomdatabase
+package com.safemail.safemailapp.newsLocalDb
 
 import androidx.room.TypeConverter
-import com.safemail.safemailapp.dataModels.Source
 import com.google.gson.Gson
 
 class Convertors {

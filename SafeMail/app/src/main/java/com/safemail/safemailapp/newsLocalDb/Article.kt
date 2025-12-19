@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.dataModels
+package com.safemail.safemailapp.newsLocalDb
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

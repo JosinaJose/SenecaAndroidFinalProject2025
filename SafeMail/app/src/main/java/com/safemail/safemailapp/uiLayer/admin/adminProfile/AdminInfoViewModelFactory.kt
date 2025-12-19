@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.uiLayer.adminProfile
+package com.safemail.safemailapp.uiLayer.admin.adminProfile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

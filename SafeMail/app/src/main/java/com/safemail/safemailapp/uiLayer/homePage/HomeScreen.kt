@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
@@ -25,26 +24,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.*
-import androidx.navigation.navArgument
 import com.safemail.safemailapp.components.NormalTextComponent
 import com.safemail.safemailapp.dataModels.Admin
 import com.safemail.safemailapp.empClouddatabase.CloudDatabaseRepo
 import com.safemail.safemailapp.empClouddatabase.EmployeeViewModelFactory
-import com.safemail.safemailapp.navigation.NavItem
-import com.safemail.safemailapp.scaffold.SafeMailBottomBar
-import com.safemail.safemailapp.uiLayer.adminLogin.AdminProfileCircle
-import com.safemail.safemailapp.uiLayer.adminProfile.AdminInfoScreen
-import com.safemail.safemailapp.uiLayer.employee.EmployeeScreen
+import com.safemail.safemailapp.uiLayer.admin.adminLogin.AdminProfileCircle
 import com.safemail.safemailapp.uiLayer.employee.EmployeeViewModel
-import com.safemail.safemailapp.uiLayer.employee.EmployeeEditScreen
-import com.safemail.safemailapp.uiLayer.newsPage.NewsScreen
-import com.safemail.safemailapp.uiLayer.newsPage.NewsViewModel
-import com.safemail.safemailapp.uiLayer.newsPage.ReadLaterScreen
-import com.safemail.safemailapp.roomdatabase.ArticleDatabase
-import com.safemail.safemailapp.roomdatabase.ArticleRepository
-import com.safemail.safemailapp.roomdatabase.NewsViewModelFactory
 import com.safemail.safemailapp.R
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.getValue
@@ -78,14 +63,59 @@ val AdminSaver = Saver<Admin?, Map<String, Any?>>( // Changed Admin to Admin?
     }
 )
 
+
+
 @Composable
 fun HomeScreen(
     initialAdmin: Admin?,
-    onLogout: () -> Unit // This comes from MyNavHost
+    onLogout: () -> Unit,
+    navController: NavHostController,
+    employeeViewModel: EmployeeViewModel
+
+    // Receive the GLOBAL controller from MyNavHost
+) {
+    // 1. Maintain local state for admin updates within the screen
+    var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
+        mutableStateOf<Admin?>(initialAdmin)
+    }
+
+    val context = LocalContext.current
+    val adminEmail = currentAdmin?.email ?: ""
+
+    // 2. Initialize ViewModels here (or pass them in from MyNavHost for better state retention)
+    val employeeViewModel: EmployeeViewModel = viewModel(
+        factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
+    )
+
+    // 3. Logic for news (if needed inside the employee list area)
+    LaunchedEffect(adminEmail) {
+        if (adminEmail.isNotEmpty()) {
+            employeeViewModel.loadEmployees()
+        }
+    }
+
+    // 4. CLEAN CONTENT: No Scaffold, No Internal NavHost
+    // This allows the MainActivity Scaffold to be the only one visible.
+    Box(modifier = Modifier.fillMaxSize()) {
+        EmployeeList(
+            employeeViewModel = employeeViewModel,
+            navController = navController, // Pass the global controller
+            admin = currentAdmin,
+            onLogout = onLogout
+        )
+    }
+}
+/*
+@Composable
+fun HomeScreen(
+    initialAdmin: Admin?,
+    onLogout: () -> Unit,
+    navController: NavHostController// This comes from MyNavHost
 ) {
     var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
         mutableStateOf<Admin?>(initialAdmin)
     }
+
 
     val navController = rememberNavController() // Internal Controller
     val context = LocalContext.current
@@ -115,7 +145,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues) // Prevents content from going under the BottomBar
         ) {
-            NavHost(
+           NavHost(
                 navController = navController,
                 startDestination = "home",
                 modifier = Modifier.fillMaxSize()
@@ -180,7 +210,7 @@ fun HomeScreen(
     }
 }
 
-
+*/
 @Composable
 fun AdminGreeting(
     admin: Admin?,
@@ -293,7 +323,8 @@ fun EmployeeList(
                                 Spacer(modifier = Modifier.width(8.dp))
 
                                 // PASS THE ENUM STATUS HERE
-                                StatusIndicator(status = employee.empStatus)
+                                StatusBadge(text = if (employee.empStatus == EmployeeStatus.ACTIVE) "Active" else "Inactive",
+                                    isActive = employee.empStatus == EmployeeStatus.ACTIVE)
                             }
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -324,14 +355,18 @@ fun EmployeeList(
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
-
 @Composable
-fun StatusIndicator(status: EmployeeStatus) {
-    val isActive = status == EmployeeStatus.ACTIVE
-
-    val backgroundColor = if (isActive) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-    val contentColor = if (isActive) Color(0xFF2E7D32) else Color(0xFFC62828)
-    val dotColor = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336)
+fun StatusBadge(
+    text: String,
+    isActive: Boolean,
+    activeColor: Color = Color(0xFF4CAF50), // Default Green
+    inactiveColor: Color = Color(0xFFF44336), // Default Red
+    activeBg: Color = Color(0xFFE8F5E9),
+    inactiveBg: Color = Color(0xFFFFEBEE)
+) {
+    val backgroundColor = if (isActive) activeBg else inactiveBg
+    val dotColor = if (isActive) activeColor else inactiveColor
+    val textColor = if (isActive) activeColor.copy(alpha = 0.9f) else inactiveColor.copy(alpha = 0.9f)
 
     Surface(
         color = backgroundColor,
@@ -348,10 +383,10 @@ fun StatusIndicator(status: EmployeeStatus) {
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = if (isActive) "Active" else "Inactive",
+                text = text,
                 style = MaterialTheme.typography.labelSmall,
-                color = contentColor,
-                fontWeight = FontWeight.Medium
+                color = textColor,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -361,7 +396,6 @@ fun OutlookConnectionStatus() {
     val context = LocalContext.current
     val packageManager = context.packageManager
 
-    // Check if Outlook app is installed
     val isOutlookInstalled = remember {
         try {
             packageManager.getPackageInfo("com.microsoft.office.outlook", 0)
@@ -374,7 +408,7 @@ fun OutlookConnectionStatus() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp) // Matches common list padding
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable {
                 if (isOutlookInstalled) {
                     val intent = packageManager.getLaunchIntentForPackage("com.microsoft.office.outlook")
@@ -384,31 +418,29 @@ fun OutlookConnectionStatus() {
                     context.startActivity(browserIntent)
                 }
             },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isOutlookInstalled) Color(0xFFE3F2FD) else Color(0xFFF5F5F5)
-        )
+        shape = RoundedCornerShape(12.dp), // Consistent with Slack and Employee cards
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 10.dp) // Thinner, cleaner look
+                .padding(16.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Indicator Light
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(if (isOutlookInstalled) Color(0xFF4CAF50) else Color.Gray, CircleShape)
+            Text(
+                text = "Outlook Service",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
             )
 
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = if (isOutlookInstalled) "Outlook Connected" else "Outlook Not Linked",
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isOutlookInstalled) Color(0xFF1976D2) else Color.DarkGray
+            // Using the common StatusBadge component
+            StatusBadge(
+                text = if (isOutlookInstalled) "Connected" else "Not Linked",
+                isActive = isOutlookInstalled,
+                activeColor = Color(0xFF1976D2), // Outlook Blue
+                activeBg = Color(0xFFE3F2FD)    // Light Blue
             )
         }
     }
@@ -416,8 +448,11 @@ fun OutlookConnectionStatus() {
 @Composable
 fun SlackConnectionStatus() {
     val context = LocalContext.current
+
+    // Logic to check if Slack is installed
     val isSlackInstalled = remember {
         try {
+            // Note: Slack package name is usually "com.Slack" or "com.slack"
             context.packageManager.getPackageInfo("com.Slack", 0)
             true
         } catch (e: Exception) {
@@ -431,15 +466,38 @@ fun SlackConnectionStatus() {
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable {
                 val intent = context.packageManager.getLaunchIntentForPackage("com.Slack")
-                if (intent != null) context.startActivity(intent)
-                else context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://slack.com/signin")))
+                if (intent != null) {
+                    context.startActivity(intent)
+                } else {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://slack.com/signin"))
+                    context.startActivity(browserIntent)
+                }
             },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F2)) // Slack-style off-white
+        // Using a clean white background to let the badge colors pop
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(10.dp).background(if (isSlackInstalled) Color(0xFF4A154B) else Color.Gray, CircleShape))
-            Spacer(modifier = Modifier.width(10.dp))
-            Text("Slack ${if (isSlackInstalled) "Connected" else "Not Linked"}", color = Color.Black)
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Pushes text to left, badge to right
+        ) {
+            Text(
+                text = "Slack Service",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
+            )
+
+            // Using your new common Generic Status Badge
+            StatusBadge(
+                text = if (isSlackInstalled) "Linked" else "Disconnected",
+                isActive = isSlackInstalled,
+                activeColor = Color(0xFF4A154B), // Slack Purple
+                activeBg = Color(0xFFF3E5F5)    // Light Purple
+            )
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.uiLayer.adminRegister
+package com.safemail.safemailapp.uiLayer.admin.adminRegister
 
 import android.util.Patterns
 import androidx.compose.runtime.getValue

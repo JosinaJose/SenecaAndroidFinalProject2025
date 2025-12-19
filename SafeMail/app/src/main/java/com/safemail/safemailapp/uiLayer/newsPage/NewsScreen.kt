@@ -28,7 +28,7 @@ import com.safemail.safemailapp.R
 
 @Composable
 fun NewsScreen(
-    newsViewModel: NewsViewModel = viewModel(),
+    newsViewModel: NewsViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToReadLater: () -> Unit
 ) {

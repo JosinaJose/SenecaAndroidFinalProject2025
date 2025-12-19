@@ -3,10 +3,10 @@ package com.safemail.safemailapp.uiLayer.newsPage
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.safemail.safemailapp.dataModels.Article
-import com.safemail.safemailapp.dataModels.NewsResponse
+import com.safemail.safemailapp.newsLocalDb.Article
+import com.safemail.safemailapp.newsLocalDb.NewsResponse
 import com.safemail.safemailapp.newsApi.RetrofitInstance
-import com.safemail.safemailapp.roomdatabase.ArticleRepository
+import com.safemail.safemailapp.newsLocalDb.ArticleRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.Response

@@ -1,6 +1,7 @@
-package com.safemail.safemailapp.uiLayer.adminProfile
+package com.safemail.safemailapp.uiLayer.admin.adminProfile
 
 import android.util.Log
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,7 +35,7 @@ class AdminProfileViewModel(admin: Admin) : ViewModel() {
             return
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             errorMessage = "Invalid email format"
             return
         }

@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.dataModels
+package com.safemail.safemailapp.newsLocalDb
 
 data class NewsResponse(
     val articles: MutableList<Article>,

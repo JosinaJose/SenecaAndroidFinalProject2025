@@ -1,7 +1,7 @@
 package com.safemail.safemailapp.newsApi
 
 import com.safemail.safemailapp.components.Constants
-import com.safemail.safemailapp.dataModels.NewsResponse
+import com.safemail.safemailapp.newsLocalDb.NewsResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
