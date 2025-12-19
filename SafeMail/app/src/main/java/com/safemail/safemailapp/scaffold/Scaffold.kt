@@ -27,25 +27,22 @@ fun SafeMailBottomBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-    ) {
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+
+        //  Navigation Bar
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 8.dp)
-                .widthIn(max = 600.dp)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
-            color = Color.White,
+                .navigationBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp), // Floating effect
+            shape = RoundedCornerShape(24.dp), // Fully rounded looks more modern
             shadowElevation = 8.dp,
-            tonalElevation = 0.dp
+            color = Color.White
         ) {
             NavigationBar(
                 containerColor = Color.Transparent,
-                modifier = Modifier.height(56.dp),
+                // Removed forced 56.dp height to allow M3 standard spacing
                 tonalElevation = 0.dp
             ) {
                 val items = listOf(
@@ -56,12 +53,6 @@ fun SafeMailBottomBar(navController: NavController) {
 
                 items.forEach { (route, icon, label) ->
                     val isSelected = currentRoute == route
-
-                    val iconColor by animateColorAsState(
-                        targetValue = if (isSelected) Color(0xFF1976D2) else Color(0xFF9E9E9E),
-                        animationSpec = tween(300),
-                        label = "iconColor"
-                    )
 
                     val scale by animateFloatAsState(
                         targetValue = if (isSelected) 1.1f else 1f,
@@ -75,78 +66,47 @@ fun SafeMailBottomBar(navController: NavController) {
                         onClick = {
                             if (currentRoute != route) {
                                 navController.navigate(route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
-                                    }
+                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
                             }
                         },
                         icon = {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                if (isSelected) {
-                                    Surface(
-                                        modifier = Modifier.size(32.dp),
-                                        shape = CircleShape,
-                                        color = Color(0xFF1976D2).copy(alpha = 0.12f)
-                                    ) {}
-                                }
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = label,
-                                    tint = iconColor,
-                                    modifier = Modifier
-                                        .size(22.dp)
-                                        .scale(scale)
-                                )
-                            }
-                        },
-                        label = {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) Color(0xFF1976D2) else Color(0xFF757575)
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = label,
+                                modifier = Modifier.scale(scale)
                             )
                         },
+                        label = {
+                            Text(text = label, style = MaterialTheme.typography.labelSmall)
+                        },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
+                            selectedIconColor = Color(0xFF1976D2),
+                            unselectedIconColor = Color(0xFF9E9E9E),
+                            selectedTextColor = Color(0xFF1976D2),
+                            unselectedTextColor = Color(0xFF757575),
+                            // Using the built-in indicator for the "circle" effect
+                            indicatorColor = Color(0xFF1976D2).copy(alpha = 0.1f)
                         )
                     )
                 }
             }
         }
 
-        // Floating Action Button - Bottom Right (only on Home page)
+        // Floating Action Button
         if (currentRoute == NavItem.Home.route) {
-            Box(
+            FloatingActionButton(
+                onClick = { /* Action */ },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 24.dp, bottom = 80.dp),
-                contentAlignment = Alignment.BottomEnd
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 140.dp), // Higher offset to clear the bar
+                containerColor = Color(0xFF1976D2),
+                contentColor = Color.White,
+                shape = CircleShape
             ) {
-                FloatingActionButton(
-                    onClick = {
-                        // TODO: Navigate to notes/tasks screen or show dialog
-                        // navController.navigate("notes")
-                    },
-                    modifier = Modifier.size(56.dp),
-                    containerColor = Color(0xFF1976D2),
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "Add Note",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                Icon(Icons.Filled.Add, "Add Note")
             }
         }
     }
