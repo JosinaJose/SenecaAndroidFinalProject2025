@@ -15,6 +15,7 @@ import com.safemail.safemailapp.uiLayer.homePage.AdminSaver
 import com.safemail.safemailapp.uiLayer.adminLogin.LoginScreen
 import com.safemail.safemailapp.uiLayer.adminProfile.AdminInfoScreen
 import com.safemail.safemailapp.uiLayer.adminRegister.SignupScreen
+import com.safemail.safemailapp.uiLayer.homePage.EmployeeList
 
 import com.safemail.safemailapp.uiLayer.splash.SplashScreen
 
@@ -68,7 +69,7 @@ fun MyNavHost(navController: NavHostController) {
         }
 
         composable(NavItem.Home.route) {
-            // 🔑 CRITICAL FIX: Only render if admin is not null
+            //Only render if admin is not null
             currentAdmin?.let { admin ->
                 HomeScreen(
                     initialAdmin = admin,
@@ -101,5 +102,6 @@ fun MyNavHost(navController: NavHostController) {
                 }
             }
         }
+
     }
 }

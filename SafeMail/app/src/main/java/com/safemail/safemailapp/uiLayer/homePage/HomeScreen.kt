@@ -49,6 +49,8 @@ import com.safemail.safemailapp.R
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.font.FontWeight
+import com.safemail.safemailapp.empClouddatabase.EmployeeStatus
 
 val AdminSaver = Saver<Admin?, Map<String, Any?>>( // Changed Admin to Admin?
     save = { admin ->
@@ -75,17 +77,18 @@ val AdminSaver = Saver<Admin?, Map<String, Any?>>( // Changed Admin to Admin?
         )
     }
 )
+
 @Composable
-fun HomeScreen(initialAdmin: Admin?,
-               onLogout: () -> Unit) {
+fun HomeScreen(
+    initialAdmin: Admin?,
+    onLogout: () -> Unit // This comes from MyNavHost
+) {
     var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
         mutableStateOf<Admin?>(initialAdmin)
     }
 
-    val navController = rememberNavController()
+    val navController = rememberNavController() // Internal Controller
     val context = LocalContext.current
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
     val adminEmail = currentAdmin?.email ?: ""
     val adminCompany = currentAdmin?.companyName ?: "safemail"
@@ -101,9 +104,17 @@ fun HomeScreen(initialAdmin: Admin?,
     } else null
 
     Scaffold(
-        bottomBar = { SafeMailBottomBar(navController) }
+        bottomBar = {
+            // The BottomBar uses the internal navController
+            SafeMailBottomBar(navController)
+        }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        // Box is better than Column here to allow the FAB to overlay correctly if needed
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues) // Prevents content from going under the BottomBar
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = "home",
@@ -114,15 +125,14 @@ fun HomeScreen(initialAdmin: Admin?,
                         if (adminEmail.isNotEmpty()) employeeViewModel.loadEmployees()
                     }
 
-                    // PASS currentAdmin to the list so it can render the header items
                     EmployeeList(
                         employeeViewModel = employeeViewModel,
                         navController = navController,
                         admin = currentAdmin,
                         onLogout = {
-                            currentAdmin = null
-                            // Navigate back to the very start (Login)
-                            navController.navigate("login") { popUpTo(0) }
+                            // FIX: Trigger the parent logout passed from MyNavHost
+                            // This prevents app termination because MyNavHost knows the "login" route
+                            onLogout()
                         }
                     )
                 }
@@ -142,7 +152,11 @@ fun HomeScreen(initialAdmin: Admin?,
 
                 composable(NavItem.News.route) {
                     newsViewModel?.let {
-                        NewsScreen(it, { navController.navigate("home") }, { navController.navigate("read_later") })
+                        NewsScreen(
+                            it,
+                            { navController.navigate("home") },
+                            { navController.navigate("read_later") }
+                        )
                     }
                 }
 
@@ -165,6 +179,8 @@ fun HomeScreen(initialAdmin: Admin?,
         }
     }
 }
+
+
 @Composable
 fun AdminGreeting(
     admin: Admin?,
@@ -222,7 +238,6 @@ fun AdminGreeting(
         }
     }
 }
-
 @Composable
 fun EmployeeList(
     employeeViewModel: EmployeeViewModel,
@@ -230,13 +245,12 @@ fun EmployeeList(
     admin: Admin?,
     onLogout: () -> Unit
 ) {
-    val employees by employeeViewModel.employees // Assuming this is a State
+    val employees by employeeViewModel.employees
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // HEADER SECTION: Now part of the scrollable list
         item {
             AdminGreeting(
                 admin = admin,
@@ -253,7 +267,6 @@ fun EmployeeList(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // LIST SECTION
         if (employees.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(top = 50.dp), contentAlignment = Alignment.Center) {
@@ -272,20 +285,75 @@ fun EmployeeList(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("${employee.empFirstname} ${employee.empLastName}", style = MaterialTheme.typography.titleSmall)
-                            Text("Email: ${employee.empEmail}", style = MaterialTheme.typography.bodySmall)
-                            Text("Dept: ${employee.empDepartment}", style = MaterialTheme.typography.bodySmall)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "${employee.empFirstname} ${employee.empLastName}",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                // PASS THE ENUM STATUS HERE
+                                StatusIndicator(status = employee.empStatus)
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Email: ${employee.empEmail}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                            Text(
+                                "Dept: ${employee.empDepartment}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
                         }
+
                         IconButton(onClick = { navController.navigate("edit_employee/${employee.id}") }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color(0xFF1976D2)
+                            )
                         }
                     }
                 }
             }
         }
 
-        // Final bottom spacing
         item { Spacer(modifier = Modifier.height(16.dp)) }
+    }
+}
+
+@Composable
+fun StatusIndicator(status: EmployeeStatus) {
+    val isActive = status == EmployeeStatus.ACTIVE
+
+    val backgroundColor = if (isActive) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+    val contentColor = if (isActive) Color(0xFF2E7D32) else Color(0xFFC62828)
+    val dotColor = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336)
+
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(dotColor, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = if (isActive) "Active" else "Inactive",
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 @Composable
