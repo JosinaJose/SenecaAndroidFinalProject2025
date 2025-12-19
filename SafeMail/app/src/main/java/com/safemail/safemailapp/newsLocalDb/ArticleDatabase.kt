@@ -7,6 +7,76 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoTask
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoDao
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoConverters
+
+@Database(
+    entities = [
+        Article::class,
+        TodoTask::class
+    ],
+    version = 4,
+    exportSchema = false
+)
+@TypeConverters(Convertors::class, TodoConverters::class)
+abstract class ArticleDatabase : RoomDatabase() {
+
+    abstract fun articleDao(): ArticleDAO
+    abstract fun todoDao(): TodoDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: ArticleDatabase? = null
+
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE articles ADD COLUMN isFavorite INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE articles ADD COLUMN isReadLater INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE articles ADD COLUMN adminEmail TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        // Added MIGRATION_3_4 to handle the transition to the TodoTask table
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Room will automatically create the todo_tasks table if it doesn't exist
+                // because of fallbackToDestructiveMigration, but we define the path here.
+            }
+        }
+
+        fun getDatabase(context: Context): ArticleDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    ArticleDatabase::class.java,
+                    "article_database"
+                )
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .fallbackToDestructiveMigration() // Critical for your testing phase
+                    .build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+
+
+/*package com.safemail.safemailapp.newsLocalDb
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Article::class],
@@ -53,4 +123,4 @@ abstract class ArticleDatabase : RoomDatabase() {
             }
         }
     }
-}
+}*/

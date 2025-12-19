@@ -4,7 +4,7 @@ package com.safemail.safemailapp.uiLayer.hubTask.stickyNotes
 import androidx.compose.runtime.*
 
 import androidx.lifecycle.ViewModel
-import com.safemail.safemailapp.dataModels.StickyNoteModel
+import com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb.StickyNoteModel
 
 
 class StickyNotesViewModel : ViewModel() {

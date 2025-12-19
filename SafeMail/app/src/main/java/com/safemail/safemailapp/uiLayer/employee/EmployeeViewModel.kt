@@ -38,10 +38,14 @@ class EmployeeViewModel(
             personalEmailAddress.value.isNotBlank()
 
     fun generateCredentials() {
-        if (!canGenerate()) return
+        if (!canGenerate() || !adminEmail.contains("@")) return // Add safety check
+
         val cleanFirst = firstName.value.lowercase().replace("\\s".toRegex(), "")
         val cleanLast = lastName.value.lowercase().replace("\\s".toRegex(), "")
-        val domain = adminEmail.substringAfter("@")
+
+        // Safety check for domain
+        val domain = adminEmail.substringAfter("@", "safemail.com")
+
         email.value = "$cleanFirst.$cleanLast@$domain"
         password.value = generatePassword()
         isGenerated.value = true

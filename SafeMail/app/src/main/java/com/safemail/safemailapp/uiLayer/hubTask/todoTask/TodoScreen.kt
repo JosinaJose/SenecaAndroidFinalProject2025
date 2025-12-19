@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.safemail.safemailapp.dataModels.TaskStatus
-import com.safemail.safemailapp.dataModels.TodoTask
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TaskStatus
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoTask
 
 @Composable
 fun TodoScreen(

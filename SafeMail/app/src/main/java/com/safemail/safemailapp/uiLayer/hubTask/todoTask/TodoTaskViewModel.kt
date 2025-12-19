@@ -1,51 +1,75 @@
 package com.safemail.safemailapp.uiLayer.hubTask.todoTask
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.safemail.safemailapp.dataModels.TaskStatus
-import com.safemail.safemailapp.dataModels.TodoTask
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TaskStatus
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoDao
+import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoTask
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class TodoViewModel : ViewModel() {
+class TodoViewModel(
+    private val todoDao: TodoDao,
+    private val adminEmail: String
+) : ViewModel() {
 
-    // Backing state (mutable) with correct TaskStatus initialization
-    private val _tasks = MutableStateFlow(
-        listOf(
-            TodoTask(1, "Clean the kitchen", TaskStatus.TODO),
-            TodoTask(2, "Update Android Studio", TaskStatus.IN_PROGRESS),
-            TodoTask(3, "Go for a run", TaskStatus.COMPLETED)
+    // 1. Observe tasks with a safety catch
+    // The .catch block prevents database mismatches from crashing the UI thread
+    val tasks: StateFlow<List<TodoTask>> = todoDao.getTasksForAdmin(adminEmail)
+        .catch { e ->
+            Log.e("TodoViewModel", "Error fetching tasks for $adminEmail: ${e.message}")
+            emit(emptyList()) // Provide an empty list instead of crashing
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
-    )
 
-    // Exposed state (immutable)
-    val tasks: StateFlow<List<TodoTask>> = _tasks
-
-    // Add a new task (default status is TODO)
+    // 2. Add a task to Room
     fun addTask(title: String) {
         if (title.isBlank()) return
 
-        val newTask = TodoTask(
-            id = (_tasks.value.maxOfOrNull { it.id } ?: 0) + 1,
-            title = title,
-            status = TaskStatus.TODO
-        )
-
-        _tasks.value = _tasks.value + newTask
-    }
-
-    // Update the status of a task
-    fun updateTaskStatus(taskId: Int, newStatus: TaskStatus) {
-        _tasks.value = _tasks.value.map { task ->
-            if (task.id == taskId) {
-                task.copy(status = newStatus)
-            } else {
-                task
+        viewModelScope.launch {
+            try {
+                val newTask = TodoTask(
+                    title = title,
+                    status = TaskStatus.TODO,
+                    adminEmail = adminEmail, // Links task to current admin
+                    createdAt = System.currentTimeMillis() //
+                )
+                todoDao.insertTask(newTask)
+            } catch (e: Exception) {
+                Log.e("TodoViewModel", "Failed to insert task: ${e.message}")
             }
         }
     }
 
-    // Delete a task by ID
+    // 3. Update status in Room
+    fun updateTaskStatus(taskId: Int, newStatus: TaskStatus) {
+        viewModelScope.launch {
+            try {
+                tasks.value.find { it.id == taskId }?.let { task ->
+                    todoDao.updateTask(task.copy(status = newStatus))
+                }
+            } catch (e: Exception) {
+                Log.e("TodoViewModel", "Failed to update task: ${e.message}")
+            }
+        }
+    }
+
+    // 4. Delete from Room
     fun deleteTask(taskId: Int) {
-        _tasks.value = _tasks.value.filterNot { it.id == taskId }
+        viewModelScope.launch {
+            try {
+                todoDao.deleteTaskById(taskId)
+            } catch (e: Exception) {
+                Log.e("TodoViewModel", "Failed to delete task: ${e.message}")
+            }
+        }
     }
 }

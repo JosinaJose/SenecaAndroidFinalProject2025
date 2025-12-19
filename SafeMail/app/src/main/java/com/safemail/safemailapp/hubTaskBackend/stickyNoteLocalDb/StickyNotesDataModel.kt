@@ -1,4 +1,4 @@
-package com.safemail.safemailapp.dataModels
+package com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb
 
 data class StickyNoteModel(
     val id: Int,

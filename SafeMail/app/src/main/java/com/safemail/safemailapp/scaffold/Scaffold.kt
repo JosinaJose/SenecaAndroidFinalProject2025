@@ -40,16 +40,19 @@ fun SafeMailBottomBar(navController: NavController) {
                 tonalElevation = 0.dp
             ) {
                 NavigationItem(NavItem.Home.route, Icons.Filled.Home, "Home", currentRoute, navController)
-                NavigationItem("employees", Icons.Filled.Badge, "Staff", currentRoute, navController)
+
+                // USE THE OBJECT HERE:
+                NavigationItem(NavItem.Employee.route, Icons.Filled.Badge, "Staff", currentRoute, navController)
 
                 Spacer(Modifier.weight(0.6f))
 
                 NavigationItem(NavItem.News.route, Icons.Filled.Language, "News", currentRoute, navController)
 
+                // Use AdminInfo or More
                 ActionNavigationItem(
                     icon = Icons.Filled.Apps,
                     label = "More",
-                    onClick = { println("More clicked") }
+                    onClick = { navController.navigate(NavItem.AdminInfo.route) }
                 )
             }
         }
@@ -72,7 +75,7 @@ fun SafeMailBottomBar(navController: NavController) {
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
         ) {
             Icon(
-                imageVector = if (currentRoute == "task_hub") Icons.Filled.Close else Icons.Filled.Add,
+                imageVector = if (currentRoute == "task_hub") Icons.Filled.Add else Icons.Filled.Add,
                 contentDescription = "Task Hub",
                 modifier = Modifier.size(30.dp)
             )
