@@ -54,6 +54,12 @@ class NewsViewModel(
 
     fun isReadLater(url: String): Boolean = readLaterMap.value[url] ?: false
 
+    fun removeFromReadLater(article: Article) {
+        viewModelScope.launch {
+            repository.deleteArticle(article.url, adminEmail)
+        }
+    }
+
 
     /* ---------------- FAVORITES ---------------- */
 

@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -62,20 +63,30 @@ fun HeadingTextComponent(value: String) {
 fun TextFields(
     labelValue: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
         label = { Text(text = labelValue) },
-        colors = TextFieldDefaults.colors(
-            focusedTextColor = Color.Black,
-            focusedLabelColor = Color.Gray,
-            unfocusedIndicatorColor = Color.LightGray
-        ),
-        keyboardOptions = KeyboardOptions.Default,
         value = value,
         onValueChange = onValueChange,
-        singleLine = true
+        enabled = enabled,
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color(0xFF1C1C1E),
+            unfocusedTextColor = Color(0xFF3A3A3C),
+            disabledTextColor = Color(0xFF8E8E93),
+            focusedBorderColor = Color(0xFF1976D2),
+            unfocusedBorderColor = Color(0xFFD1D1D6),
+            disabledBorderColor = Color(0xFFE5E5EA),
+            focusedLabelColor = Color(0xFF1976D2),
+            unfocusedLabelColor = Color(0xFF8E8E93),
+            disabledLabelColor = Color(0xFFC7C7CC),
+            cursorColor = Color(0xFF1976D2)
+        ),
+        keyboardOptions = KeyboardOptions.Default
     )
 }
 
@@ -83,31 +94,49 @@ fun TextFields(
 fun PasswordTextField(
     labelValue: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var showPassword by remember { mutableStateOf(false) }
 
     OutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors(
-            focusedTextColor = Color.Black,
-            focusedIndicatorColor = Color.Gray,
-            focusedLabelColor = Color.Gray,
-            unfocusedIndicatorColor = Color.LightGray
-        ),
         value = value,
         onValueChange = onValueChange,
         label = { Text(text = labelValue) },
+        enabled = enabled,
         singleLine = true,
-        visualTransformation =
-            if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+        shape = RoundedCornerShape(12.dp),
+        visualTransformation = if (showPassword) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color(0xFF1C1C1E),
+            unfocusedTextColor = Color(0xFF3A3A3C),
+            disabledTextColor = Color(0xFF8E8E93),
+            focusedBorderColor = Color(0xFF1976D2),
+            unfocusedBorderColor = Color(0xFFD1D1D6),
+            disabledBorderColor = Color(0xFFE5E5EA),
+            focusedLabelColor = Color(0xFF1976D2),
+            unfocusedLabelColor = Color(0xFF8E8E93),
+            disabledLabelColor = Color(0xFFC7C7CC),
+            cursorColor = Color(0xFF1976D2)
+        ),
         trailingIcon = {
             Icon(
-                imageVector =
-                    if (showPassword) Icons.Filled.Visibility
-                    else Icons.Filled.VisibilityOff,
-                contentDescription =
-                    if (showPassword) "Hide password" else "Show password",
+                imageVector = if (showPassword) {
+                    Icons.Filled.Visibility
+                } else {
+                    Icons.Filled.VisibilityOff
+                },
+                contentDescription = if (showPassword) {
+                    "Hide password"
+                } else {
+                    "Show password"
+                },
+                tint = Color(0xFF8E8E93),
                 modifier = Modifier.clickable {
                     showPassword = !showPassword
                 }
@@ -118,33 +147,47 @@ fun PasswordTextField(
 @Composable
 fun ButtonComponent(
     value: String,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(56.dp),
         contentPadding = PaddingValues(),
-        colors = ButtonDefaults.buttonColors(Color.Transparent)
+        colors = ButtonDefaults.buttonColors(Color.Transparent),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp,
+            disabledElevation = 0.dp
+        )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(56.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        listOf(Color.Blue, Color.White)
+                        colors = listOf(
+                            Color(0xFF1976D2),
+                            Color(0xFF42A5F5)
+                        )
                     ),
-                    shape = RoundedCornerShape(50.dp)
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .then(
+                    if (!enabled) Modifier.alpha(0.5f) else Modifier
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = value,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                letterSpacing = 0.5.sp
             )
         }
     }

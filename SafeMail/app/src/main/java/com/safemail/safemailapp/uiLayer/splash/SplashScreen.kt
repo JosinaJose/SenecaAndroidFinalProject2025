@@ -6,10 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -23,16 +22,18 @@ fun SplashScreen(
     onNavigate: () -> Unit
 ) {
 
-    // Navigate when ViewModel is ready
-    if (viewModel.isReady) {
-        onNavigate()
+    // Navigate when ViewModel is ready - using LaunchedEffect to avoid multiple calls
+    LaunchedEffect(viewModel.isReady) {
+        if (viewModel.isReady) {
+            onNavigate()
+        }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White), // Use Compose's Color.White
-        contentAlignment = Alignment.Center // Correct placement
+            .background(Color.White),
+        contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.safemail),

@@ -20,7 +20,7 @@ class ArticleRepository(private val dao: ArticleDAO) {
 
     suspend fun updateArticle(article: Article) = dao.update(article)
 
-    suspend fun deleteArticle(article: Article) = dao.deleteArticle(article)
+    //suspend fun deleteArticle(article: Article) = dao.deleteArticle(article)
 
     // Check saved status specifically for this admin
     suspend fun isArticleSaved(url: String, adminEmail: String): Boolean =
@@ -28,6 +28,10 @@ class ArticleRepository(private val dao: ArticleDAO) {
 
     suspend fun getArticleByUrl(url: String, adminEmail: String): Article? =
         dao.getArticleByUrl(url, adminEmail)
+
+    suspend fun deleteArticle(url: String, adminEmail: String) {
+        dao.deleteByUrl(url, adminEmail)
+    }
 
 
 

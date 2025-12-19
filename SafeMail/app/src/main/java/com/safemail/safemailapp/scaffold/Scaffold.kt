@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
@@ -29,22 +30,22 @@ fun SafeMailBottomBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding(), // FIX: Adds padding for the system navigation bar (Home pill)
-        contentAlignment = Alignment.BottomCenter
+            .navigationBarsPadding()
     ) {
         Surface(
             modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 12.dp) // Added slightly more bottom padding
-                .widthIn(max = 600.dp) // Prevents the bar from stretching too wide on tablets/horizontal
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 8.dp)
+                .widthIn(max = 600.dp)
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
             color = Color.White,
             shadowElevation = 8.dp,
             tonalElevation = 0.dp
         ) {
             NavigationBar(
                 containerColor = Color.Transparent,
-                modifier = Modifier.height(64.dp), // Standard compact height
+                modifier = Modifier.height(56.dp),
                 tonalElevation = 0.dp
             ) {
                 val items = listOf(
@@ -63,7 +64,7 @@ fun SafeMailBottomBar(navController: NavController) {
                     )
 
                     val scale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.15f else 1f, // Slightly higher for better visual feedback
+                        targetValue = if (isSelected) 1.1f else 1f,
                         animationSpec = tween(300),
                         label = "scale"
                     )
@@ -83,10 +84,13 @@ fun SafeMailBottomBar(navController: NavController) {
                             }
                         },
                         icon = {
-                            Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(32.dp)
+                            ) {
                                 if (isSelected) {
                                     Surface(
-                                        modifier = Modifier.size(38.dp),
+                                        modifier = Modifier.size(32.dp),
                                         shape = CircleShape,
                                         color = Color(0xFF1976D2).copy(alpha = 0.12f)
                                     ) {}
@@ -96,7 +100,7 @@ fun SafeMailBottomBar(navController: NavController) {
                                     contentDescription = label,
                                     tint = iconColor,
                                     modifier = Modifier
-                                        .size(24.dp) // Standard icon size
+                                        .size(22.dp)
                                         .scale(scale)
                                 )
                             }
@@ -111,6 +115,36 @@ fun SafeMailBottomBar(navController: NavController) {
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = Color.Transparent
                         )
+                    )
+                }
+            }
+        }
+
+        // Floating Action Button - Bottom Right (only on Home page)
+        if (currentRoute == NavItem.Home.route) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 24.dp, bottom = 80.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        // TODO: Navigate to notes/tasks screen or show dialog
+                        // navController.navigate("notes")
+                    },
+                    modifier = Modifier.size(56.dp),
+                    containerColor = Color(0xFF1976D2),
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add Note",
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }

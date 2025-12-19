@@ -1,9 +1,11 @@
 package com.safemail.safemailapp.uiLayer.employee
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -11,9 +13,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.safemail.safemailapp.R
 import com.safemail.safemailapp.components.NormalTextComponent
@@ -114,36 +121,67 @@ fun EmployeeScreen(
                 onValueChange = { /* Not needed as it's read-only */ },
                 label = { Text(stringResource(R.string.joining_date)) },
                 readOnly = true,
-                // enabled = false is key: it stops the keyboard/cursor
-                // from appearing so the Box can handle the tap
                 enabled = false,
                 modifier = Modifier.fillMaxWidth(),
-                // Add a calendar icon to the end for better UI
+                shape = RoundedCornerShape(12.dp),
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.DateRange,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = Color(0xFF8E8E93)
                     )
                 },
-                // Ensures the text looks visible even when disabled
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledTextColor = Color(0xFF3A3A3C),
+                    disabledBorderColor = Color(0xFFD1D1D6),
+                    disabledLabelColor = Color(0xFF8E8E93),
+                    disabledTrailingIconColor = Color(0xFF8E8E93)
                 )
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
 
         // GENERATE BUTTON
-        // Logic: Checks canGenerate() then creates email@admindomain.com
         Button(
             onClick = { viewModel.generateCredentials() },
             enabled = viewModel.canGenerate(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            contentPadding = PaddingValues(),
+            colors = ButtonDefaults.buttonColors(Color.Transparent),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 8.dp,
+                disabledElevation = 0.dp
+            )
         ) {
-            Text("Generate Email & Password")
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF1976D2),
+                                Color(0xFF42A5F5)
+                            )
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .then(
+                        if (!viewModel.canGenerate()) Modifier.alpha(0.5f) else Modifier
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Generate Email & Password",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    letterSpacing = 0.5.sp
+                )
+            }
         }
 
         // Show results only if generated
@@ -191,12 +229,23 @@ fun EmployeeScreen(
         // ACTION BUTTONS
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
-                onClick = { navController.popBackStack() }
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF1976D2)
+                )
             ) {
-                Text("Cancel")
+                Text(
+                    "Cancel",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
 
             Button(
@@ -205,9 +254,21 @@ fun EmployeeScreen(
                     // Optional: Navigate back to home list after save
                     navController.popBackStack()
                 },
-                enabled = viewModel.isGenerated.value
+                enabled = viewModel.isGenerated.value,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1976D2),
+                    contentColor = Color.White
+                )
             ) {
-                Text("Save Employee")
+                Text(
+                    "Save Employee",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

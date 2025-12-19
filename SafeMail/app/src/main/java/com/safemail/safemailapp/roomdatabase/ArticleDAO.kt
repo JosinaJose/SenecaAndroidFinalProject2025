@@ -36,4 +36,7 @@ interface ArticleDAO {
 
     @Query("SELECT EXISTS(SELECT 1 FROM articles WHERE url = :url AND adminEmail = :adminEmail)")
     suspend fun isArticleSaved(url: String, adminEmail: String): Boolean
+
+    @Query("DELETE FROM articles WHERE url = :url AND adminEmail = :adminEmail")
+    suspend fun deleteByUrl(url: String, adminEmail: String)
 }

@@ -87,7 +87,8 @@ fun NewsScreen(
                         contentPadding = PaddingValues(
                             start = 6.dp,
                             end = 8.dp,
-                            bottom = 8.dp)
+                            bottom = 8.dp
+                        )
                     ) {
                         // Search section with proper padding
                         item {
@@ -127,10 +128,7 @@ fun NewsScreen(
                         }
                     }
                 }
-            } ?: CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
-            )
+            }
         }
     }
 }

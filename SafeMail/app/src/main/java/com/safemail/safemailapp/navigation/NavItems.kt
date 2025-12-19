@@ -10,5 +10,6 @@ sealed class NavItem(val route: String) {
     object Home : NavItem("home")
     object News : NavItem( "News")
     object ReadLater : NavItem("read_later")
+    object Employee: NavItem("Employee")
 
 }

@@ -6,8 +6,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,7 +23,8 @@ import com.safemail.safemailapp.dataModels.Article
 fun NewsItemCard(
     article: Article,
     isReadLater: Boolean,
-    onReadLaterClick: () -> Unit
+    onReadLaterClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -30,7 +32,8 @@ fun NewsItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                article.url?.let { url ->
+                val url = article.url
+                if (!url.isNullOrEmpty()) {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
                 }
@@ -63,7 +66,33 @@ fun NewsItemCard(
                         tint = if (isReadLater) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
+
+                if (onDeleteClick != null) {
+                    IconButton(
+                        onClick = { onDeleteClick() },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete from Read Later",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+                onDeleteClick?.let {
+                    IconButton(
+                        onClick = it,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete from Read Later",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
+
 
             Spacer(modifier = Modifier.height(8.dp))
 

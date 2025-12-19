@@ -147,7 +147,8 @@ fun SignupScreen(
             TextButtons(
                 onClick = onLoginClick
             ) {
-                Text(stringResource(R.string.existing_account))
+                Text(stringResource(R.string.existing_account),
+                color = Color.Blue)
             }
         }
     }
