@@ -76,7 +76,8 @@ val AdminSaver = Saver<Admin?, Map<String, Any?>>( // Changed Admin to Admin?
     }
 )
 @Composable
-fun HomeScreen(initialAdmin: Admin?) {
+fun HomeScreen(initialAdmin: Admin?,
+               onLogout: () -> Unit) {
     var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
         mutableStateOf<Admin?>(initialAdmin)
     }
@@ -195,7 +196,7 @@ fun AdminGreeting(
 
             IconButton(onClick = onLogout) {
                 Icon(
-                    Icons.Default.ExitToApp,
+                    imageVector = Icons.Default.ExitToApp,
                     contentDescription = "Logout",
                     tint = MaterialTheme.colorScheme.error
                 )
