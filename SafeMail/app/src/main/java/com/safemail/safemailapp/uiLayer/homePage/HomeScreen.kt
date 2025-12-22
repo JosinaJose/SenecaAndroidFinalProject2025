@@ -70,41 +70,32 @@ fun HomeScreen(
     initialAdmin: Admin?,
     onLogout: () -> Unit,
     navController: NavHostController,
-    employeeViewModel: EmployeeViewModel
-
-    // Receive the GLOBAL controller from MyNavHost
+    employeeViewModel: EmployeeViewModel // Pass the shared VM from NavHost
 ) {
-    // 1. Maintain local state for admin updates within the screen
+    // Local admin state
     var currentAdmin by rememberSaveable(stateSaver = AdminSaver) {
         mutableStateOf<Admin?>(initialAdmin)
     }
 
-    val context = LocalContext.current
     val adminEmail = currentAdmin?.email ?: ""
 
-    // 2. Initialize ViewModels here (or pass them in from MyNavHost for better state retention)
-    val employeeViewModel: EmployeeViewModel = viewModel(
-        factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
-    )
-
-    // 3. Logic for news (if needed inside the employee list area)
+    // Load employees once when admin email changes
     LaunchedEffect(adminEmail) {
         if (adminEmail.isNotEmpty()) {
             employeeViewModel.loadEmployees()
         }
     }
 
-    // 4. CLEAN CONTENT: No Scaffold, No Internal NavHost
-    // This allows the MainActivity Scaffold to be the only one visible.
     Box(modifier = Modifier.fillMaxSize()) {
         EmployeeList(
             employeeViewModel = employeeViewModel,
-            navController = navController, // Pass the global controller
+            navController = navController,
             admin = currentAdmin,
             onLogout = onLogout
         )
     }
 }
+
 /*
 @Composable
 fun HomeScreen(

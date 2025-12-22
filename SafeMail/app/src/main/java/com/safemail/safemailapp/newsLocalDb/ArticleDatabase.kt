@@ -7,6 +7,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+
+// Ensure these specific imports exist
+import com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb.StickyNoteDao
+import com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb.StickyNoteModel
 import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoTask
 import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoDao
 import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoConverters
@@ -14,9 +18,10 @@ import com.safemail.safemailapp.hubTaskBackend.todoTaskLocalDb.TodoConverters
 @Database(
     entities = [
         Article::class,
-        TodoTask::class
+        TodoTask::class,
+        StickyNoteModel::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Convertors::class, TodoConverters::class)
@@ -24,6 +29,7 @@ abstract class ArticleDatabase : RoomDatabase() {
 
     abstract fun articleDao(): ArticleDAO
     abstract fun todoDao(): TodoDao
+    abstract fun stickyNoteDao(): StickyNoteDao
 
     companion object {
         @Volatile

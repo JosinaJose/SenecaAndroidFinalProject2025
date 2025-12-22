@@ -2,13 +2,13 @@ package com.safemail.safemailapp.newsLocalDb
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.safemail.safemailapp.uiLayer.newsPage.NewsViewModel
 
 class NewsViewModelFactory(
     private val repository: ArticleRepository,
     private val adminEmail: String
 ) : ViewModelProvider.Factory {
-
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

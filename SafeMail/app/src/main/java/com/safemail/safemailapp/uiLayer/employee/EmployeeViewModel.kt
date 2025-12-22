@@ -10,41 +10,56 @@ import kotlinx.coroutines.launch
 
 class EmployeeViewModel(
     private val repository: CloudDatabaseRepo,
-    private val adminEmail: String // Injected via Factory
+    private val adminEmail: String
 ) : ViewModel() {
 
-    // Form fields
-    var firstName = mutableStateOf("")
-    var lastName = mutableStateOf("")
-    var phoneNumber = mutableStateOf("")
-    var personalEmailAddress = mutableStateOf("")
-    var department = mutableStateOf("")
-    var joiningDate = mutableStateOf("")
+    // ---------- FORM FIELDS ----------
+    val firstName = mutableStateOf("")
+    val lastName = mutableStateOf("")
+    val phoneNumber = mutableStateOf("")
+    val personalEmailAddress = mutableStateOf("")
+    val department = mutableStateOf("")
+    val joiningDate = mutableStateOf("")
 
-    // Generated credentials
-    var email = mutableStateOf("")
-    var password = mutableStateOf("")
-    var employeeStatus = mutableStateOf(EmployeeStatus.ACTIVE)
+    // ---------- GENERATED ----------
+    val email = mutableStateOf("")
+    val password = mutableStateOf("")
+    val employeeStatus = mutableStateOf(EmployeeStatus.ACTIVE)
 
-    var isGenerated = mutableStateOf(false)
-    var employees = mutableStateOf(listOf<CloudEmpInfo>())
-    var saveSuccess = mutableStateOf(false)
+    // ---------- UI STATE ----------
+    val isGenerated = mutableStateOf(false)
+    val isSaving = mutableStateOf(false)
+    val saveSuccess = mutableStateOf(false)
 
-    fun canGenerate(): Boolean = firstName.value.isNotBlank() &&
-            lastName.value.isNotBlank() &&
-            phoneNumber.value.isNotBlank() &&
-            department.value.isNotBlank() &&
-            joiningDate.value.isNotBlank() &&
-            personalEmailAddress.value.isNotBlank()
+    // ---------- EMPLOYEE LIST ----------
+    val employees = mutableStateOf<List<CloudEmpInfo>>(emptyList())
+
+    init {
+        if (adminEmail.isNotBlank()) {
+            loadEmployees()
+        }
+    }
+
+    fun loadEmployees() {
+        viewModelScope.launch {
+            employees.value = repository.getAllEmployees(adminEmail)
+        }
+    }
+
+    fun canGenerate(): Boolean =
+        firstName.value.isNotBlank() &&
+                lastName.value.isNotBlank() &&
+                phoneNumber.value.isNotBlank() &&
+                department.value.isNotBlank() &&
+                joiningDate.value.isNotBlank() &&
+                personalEmailAddress.value.isNotBlank()
 
     fun generateCredentials() {
-        if (!canGenerate() || !adminEmail.contains("@")) return // Add safety check
+        if (!canGenerate() || isGenerated.value) return
 
-        val cleanFirst = firstName.value.lowercase().replace("\\s".toRegex(), "")
-        val cleanLast = lastName.value.lowercase().replace("\\s".toRegex(), "")
-
-        // Safety check for domain
-        val domain = adminEmail.substringAfter("@", "safemail.com")
+        val cleanFirst = firstName.value.trim().lowercase()
+        val cleanLast = lastName.value.trim().lowercase()
+        val domain = adminEmail.substringAfter("@")
 
         email.value = "$cleanFirst.$cleanLast@$domain"
         password.value = generatePassword()
@@ -52,19 +67,27 @@ class EmployeeViewModel(
     }
 
     private fun generatePassword(): String {
-        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#"
-        return (1..10).map { chars.random() }.joinToString("")
+        val upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+        val lower = "abcdefghijkmnpqrstuvwxyz"
+        val digits = "23456789"
+        val symbols = "@#$%"
+
+        val all = upper + lower + digits + symbols
+        val pwd = mutableListOf(
+            upper.random(),
+            lower.random(),
+            digits.random(),
+            symbols.random()
+        )
+
+        repeat(8) { pwd.add(all.random()) }
+        return pwd.shuffled().joinToString("")
     }
 
-    fun loadEmployees() {
-        viewModelScope.launch {
-            val list = repository.getAllEmployees(adminEmail)
-            employees.value = list
-        }
-    }
+    fun saveEmployee(onComplete: () -> Unit = {}) {
+        if (!isGenerated.value || isSaving.value) return
 
-    fun saveEmployee() {
-        if (!isGenerated.value) return
+        isSaving.value = true
 
         val employee = CloudEmpInfo(
             adminEmail = adminEmail,
@@ -81,22 +104,30 @@ class EmployeeViewModel(
         )
 
         viewModelScope.launch {
-            val success = repository.addEmployee(employee)
-            saveSuccess.value = success
-            if (success) {
-                clearFields()
+            saveSuccess.value = repository.addEmployee(employee)
+            isSaving.value = false
+
+            if (saveSuccess.value) {
+                clearForm()
                 loadEmployees()
+                onComplete()
             }
         }
     }
-    fun updateEmployee(employeeId: String, updatedEmployee: CloudEmpInfo, onComplete: (Boolean) -> Unit) {
+
+    fun updateEmployee(
+        employeeId: String,
+        updatedEmployee: CloudEmpInfo,
+        onResult: (Boolean) -> Unit
+    ) {
         viewModelScope.launch {
             val success = repository.updateEmployee(employeeId, updatedEmployee)
             if (success) loadEmployees()
-            onComplete(success)
+            onResult(success)
         }
     }
-    private fun clearFields() {
+
+    private fun clearForm() {
         firstName.value = ""
         lastName.value = ""
         phoneNumber.value = ""

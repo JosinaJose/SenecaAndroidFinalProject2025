@@ -1,37 +1,54 @@
 package com.safemail.safemailapp.uiLayer.hubTask.stickyNotes
 
 
-import androidx.compose.runtime.*
+
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb.StickyNoteDao
 import com.safemail.safemailapp.hubTaskBackend.stickyNoteLocalDb.StickyNoteModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
+class StickyNotesViewModel(
+    private val dao: StickyNoteDao,
+    private val adminEmail: String
+) : ViewModel() {
 
-class StickyNotesViewModel : ViewModel() {
-    private val _notes = mutableStateOf<List<StickyNoteModel>>(emptyList())
-    val notes: State<List<StickyNoteModel>> = _notes
+    // Observe the database. This replaces the manual _notes list.
+    val notes: StateFlow<List<StickyNoteModel>> = dao.getNotesForAdmin(adminEmail)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun addNote(text: String, color: Long) {
         if (text.isBlank()) return
-
-        // Fix: Use the provided color and ensure unique ID
-        val newId = (_notes.value.maxOfOrNull { it.id } ?: 0) + 1
-        val newNote = StickyNoteModel(
-            id = newId,
-            text = text,
-            color = color // Color is now applied correctly
-        )
-        _notes.value = _notes.value + newNote
+        viewModelScope.launch {
+            val newNote = StickyNoteModel(
+                text = text,
+                color = color,
+                adminEmail = adminEmail
+            )
+            dao.insertNote(newNote)
+        }
     }
 
     fun updateNote(id: Int, newText: String) {
-        _notes.value = _notes.value.map {
-            if (it.id == id) it.copy(text = newText) else it
+        viewModelScope.launch {
+            // Find the current note in our list and update it
+            notes.value.find { it.id == id }?.let { existingNote ->
+                dao.updateNote(existingNote.copy(text = newText))
+            }
         }
     }
 
     fun deleteNote(id: Int) {
-        _notes.value = _notes.value.filterNot { it.id == id }
+        viewModelScope.launch {
+            dao.deleteNoteById(id)
+        }
     }
 }
-

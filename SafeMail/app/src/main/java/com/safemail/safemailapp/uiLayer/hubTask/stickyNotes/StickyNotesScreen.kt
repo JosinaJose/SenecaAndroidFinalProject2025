@@ -35,7 +35,7 @@ fun StickyNotesScreen(
     onBack: () -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
-    val notes by viewModel.notes
+    val notes by viewModel.notes.collectAsState()
 
     Scaffold(
         topBar = {
