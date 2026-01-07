@@ -28,32 +28,22 @@ import com.safemail.safemailapp.uiLayer.hubTask.stickyNotes.StickyNotesScreen
 import com.safemail.safemailapp.uiLayer.hubTask.stickyNotes.StickyNotesViewModel
 import com.safemail.safemailapp.uiLayer.hubTask.todoTask.TodoScreen
 import com.safemail.safemailapp.uiLayer.hubTask.todoTask.TodoViewModel
-import com.safemail.safemailapp.uiLayer.splash.SplashScreen
-
-
 import com.safemail.safemailapp.uiLayer.newsPage.NewsScreen
 import com.safemail.safemailapp.uiLayer.newsPage.NewsViewModel
 import com.safemail.safemailapp.uiLayer.newsPage.ReadLaterScreen
 
 @Composable
 fun MyNavHost(navController: NavHostController) {
-
+    val context = LocalContext.current
     var currentAdmin by rememberSaveable(stateSaver = AdminSaver) { mutableStateOf<Admin?>(null) }
 
     val adminEmail = currentAdmin?.email ?: ""
     val adminCompany = currentAdmin?.companyName ?: "safemail"
 
-    NavHost(navController = navController, startDestination = NavItem.Splash.route) {
+    // Initialize Database once
+    val database = remember { ArticleDatabase.getDatabase(context) }
 
-        composable(NavItem.Splash.route) {
-            SplashScreen {
-                navController.navigate(NavItem.Signup.route) {
-                    popUpTo(NavItem.Splash.route) {
-                        inclusive = true
-                    }
-                }
-            }
-        }
+    NavHost(navController = navController, startDestination = NavItem.Login.route) {
 
         composable(NavItem.Signup.route) {
             SignupScreen(
@@ -64,12 +54,10 @@ fun MyNavHost(navController: NavHostController) {
 
         composable(NavItem.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    currentAdmin = it
+                onLoginSuccess = { admin ->
+                    currentAdmin = admin
                     navController.navigate(NavItem.Home.route) {
-                        popUpTo(NavItem.Login.route) {
-                            inclusive = true
-                        }
+                        popUpTo(NavItem.Login.route) { inclusive = true }
                     }
                 },
                 onCreateAccountClick = { navController.navigate(NavItem.Signup.route) }
@@ -77,27 +65,29 @@ fun MyNavHost(navController: NavHostController) {
         }
 
         composable(NavItem.Home.route) {
-
-            val employeeViewModel: EmployeeViewModel = viewModel(
-                factory = EmployeeViewModelFactory(CloudDatabaseRepo(), currentAdmin?.email ?: "")
-            )
-
-            currentAdmin?.let { admin ->
+            // Guard: If admin is null, go to Login. Otherwise, show Home.
+            val admin = currentAdmin
+            if (admin == null) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(NavItem.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            } else {
+                val employeeViewModel: EmployeeViewModel = viewModel(
+                    factory = EmployeeViewModelFactory(CloudDatabaseRepo(), admin.email)
+                )
                 HomeScreen(
                     initialAdmin = admin,
                     onLogout = {
                         currentAdmin = null
                         navController.navigate(NavItem.Login.route) {
-                            popUpTo(0) {
-                                inclusive = true
-                            }
+                            popUpTo(0) { inclusive = true }
                         }
                     },
                     navController = navController,
                     employeeViewModel = employeeViewModel
                 )
-            } ?: LaunchedEffect(Unit) {
-                navController.navigate(NavItem.Login.route) { popUpTo(0) { inclusive = true } }
             }
         }
 
@@ -105,7 +95,6 @@ fun MyNavHost(navController: NavHostController) {
             val employeeViewModel: EmployeeViewModel = viewModel(
                 factory = EmployeeViewModelFactory(CloudDatabaseRepo(), adminEmail)
             )
-
             EmployeeScreen(
                 navController = navController,
                 currentAdminEmail = adminEmail,
@@ -136,101 +125,76 @@ fun MyNavHost(navController: NavHostController) {
             currentAdmin?.let {
                 AdminInfoScreen(
                     admin = it,
-                    onBack = { navController.popBackStack() },
-                    onAdminUpdate = { updated -> currentAdmin = updated })
+                    onBack = {
+                        navController.navigate(NavItem.Home.route) {
+                            popUpTo(NavItem.Home.route) { inclusive = false }
+                        }
+                    },
+                    onAdminUpdate = { updated -> currentAdmin = updated }
+                )
             }
         }
 
-        // --- THE HUB ---
         composable(NavItem.TaskHub.route) {
             TaskHubScreen(
                 onNavigateToTodo = { navController.navigate(NavItem.Todo.route) },
                 onNavigateToNotes = { navController.navigate(NavItem.StickyNotes.route) },
-                onNavigateToEvents = { /* Future */ },
-                onNavigateToReminders = { /* Future */ }
+                onNavigateToEvents = { },
+                onNavigateToReminders = { }
             )
         }
 
-        // --- WORKSPACE TOOLS (TODO SCREEN) ---
         composable(NavItem.Todo.route) {
-            val context = LocalContext.current
-            val database = ArticleDatabase.getDatabase(context) // Define the database here
-
             val todoViewModel: TodoViewModel = viewModel(
                 factory = TodoViewModelFactory(database.todoDao(), adminEmail)
             )
-
             TodoScreen(
                 viewModel = todoViewModel,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        // --- STICKY NOTES ---
-        composable(NavItem.StickyNotes.route) {
-            val context = LocalContext.current
-            val database = ArticleDatabase.getDatabase(context)
-
-            //Initialize the ViewModel using the Factory
-            val stickyViewModel: StickyNotesViewModel = viewModel(
-                factory = StickyNoteViewModelFactory(
-                    dao = database.stickyNoteDao(),
-                    adminEmail = adminEmail // This comes from currentAdmin?.email in MyNavHost
-                )
-            )
-
-            // Pass the ViewModel to the Screen
-            StickyNotesScreen(
-                viewModel = stickyViewModel,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-
-// ---------- NEWS SCREEN ----------
-                composable(NavItem.News.route) {
-                    val context = LocalContext.current
-                    // 1. Get the database instance
-                    val database = ArticleDatabase.getDatabase(context)
-
-                    val newsViewModel: NewsViewModel? = if (adminEmail.isNotEmpty()) {
-                        viewModel(
-                            factory = NewsViewModelFactory(
-                                // 2. Pass the articleDao to the repository
-                                repository = ArticleRepository(database.articleDao()),
-                                adminEmail = adminEmail
-                            )
-                        )
-                    } else null
-
-                    newsViewModel?.let {
-                        NewsScreen(
-                            newsViewModel = it,
-                            onNavigateBack = { navController.navigate(NavItem.Home.route) },
-                            onNavigateToReadLater = { navController.navigate(NavItem.ReadLater.route) }
-                        )
+                onBack = {
+                    navController.navigate(NavItem.Home.route) {
+                        popUpTo(NavItem.Home.route) { inclusive = false }
                     }
                 }
+            )
+        }
 
-// ---------- READ LATER SCREEN ----------
-        composable(NavItem.ReadLater.route) {
-            val context = LocalContext.current
-            val database = ArticleDatabase.getDatabase(context)
+        composable(NavItem.StickyNotes.route) {
+            val stickyViewModel: StickyNotesViewModel = viewModel(
+                factory = StickyNoteViewModelFactory(database.stickyNoteDao(), adminEmail)
+            )
+            StickyNotesScreen(
+                viewModel = stickyViewModel,
+                onBack = {
+                    navController.navigate(NavItem.Home.route) {
+                        popUpTo(NavItem.Home.route) { inclusive = false }
+                    }
+                }
+            )
+        }
 
-            val newsViewModel: NewsViewModel? = if (adminEmail.isNotEmpty()) {
-                viewModel(
-                    factory = NewsViewModelFactory(
-                        // 3. Pass the articleDao to the repository here as well
-                        repository = ArticleRepository(database.articleDao()),
-                        adminEmail = adminEmail
-                    )
+        composable(NavItem.News.route) {
+            if (adminEmail.isNotEmpty()) {
+                val newsViewModel: NewsViewModel = viewModel(
+                    factory = NewsViewModelFactory(ArticleRepository(database.articleDao()), adminEmail)
                 )
-            } else null
+                NewsScreen(
+                    newsViewModel = newsViewModel,
+                    navController = navController,
+                    onNavigateToReadLater = { navController.navigate(NavItem.ReadLater.route) }
+                )
+            }
+        }
 
-            newsViewModel?.let {
+        composable(NavItem.ReadLater.route) {
+            if (adminEmail.isNotEmpty()) {
+                val newsViewModel: NewsViewModel = viewModel(
+                    factory = NewsViewModelFactory(ArticleRepository(database.articleDao()), adminEmail)
+                )
                 ReadLaterScreen(
-                    newsViewModel = it,
-                    onNavigateBack = { navController.popBackStack() }
+                    newsViewModel = newsViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }

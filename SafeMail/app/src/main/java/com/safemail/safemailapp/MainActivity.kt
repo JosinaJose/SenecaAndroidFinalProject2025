@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,11 +21,18 @@ import com.safemail.safemailapp.navigation.MyNavHost
 import com.safemail.safemailapp.navigation.NavItem
 import com.safemail.safemailapp.scaffold.SafeMailBottomBar
 import com.safemail.safemailapp.ui.theme.SafeMailAppTheme
+import com.safemail.safemailapp.uiLayer.splash.SplashScreenViewModel
 
 class MainActivity : ComponentActivity() {
+    private val splashViewModel: SplashScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+      //  installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        splashScreen.setKeepOnScreenCondition {
+            !splashViewModel.isReady
+        }
 
         enableEdgeToEdge()
         setContent {
@@ -36,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 val currentRoute = navBackStackEntry?.destination?.route
 
                 val showBottomBar = currentRoute !in listOf(
-                    NavItem.Splash.route,
+                   // NavItem.Splash.route,
                     NavItem.Login.route,
                     NavItem.Signup.route
                 )

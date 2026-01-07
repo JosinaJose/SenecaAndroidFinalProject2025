@@ -24,12 +24,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavHostController
 import com.safemail.safemailapp.R
 
 @Composable
 fun NewsScreen(
     newsViewModel: NewsViewModel,
-    onNavigateBack: () -> Unit,
+    navController: NavHostController, // Changed to NavHostController
     onNavigateToReadLater: () -> Unit
 ) {
     var currentPage by rememberSaveable { mutableIntStateOf(1) }
@@ -62,7 +63,12 @@ fun NewsScreen(
 
         NewsTopBar(
             readLaterCount = readLaterArticles.size,
-            onBack = onNavigateBack,
+            onBack = {
+                // Navigate to home explicitly instead of using callback
+                navController.navigate("home") {
+                    popUpTo("home") { inclusive = false }
+                }
+            },
             onReadLater = onNavigateToReadLater
         )
 
@@ -212,7 +218,7 @@ fun NewsTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.Top, // 🔑 KEY CHANGE
+            verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 

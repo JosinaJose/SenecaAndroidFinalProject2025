@@ -2,7 +2,7 @@ package com.safemail.safemailapp.navigation
 
 
 sealed class NavItem(val route: String) {
-    object Splash : NavItem("splash")
+  //  object Splash : NavItem("splash")
     object Signup : NavItem("signup")
     object Login : NavItem("login")
     object Home : NavItem("home")

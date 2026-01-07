@@ -213,12 +213,24 @@ fun EmployeeScreen(
 
                 Button(
                     onClick = {
-                        viewModel.saveEmployee()
-                        navController.popBackStack()
+                        viewModel.saveEmployee(onComplete = {
+                            // Navigate to home with proper back stack management
+                            navController.navigate("home") {
+                                popUpTo("home") { inclusive = false }
+                            }
+                        })
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = !viewModel.isSaving.value
                 ) {
-                    Text("Save Employee")
+                    if (viewModel.isSaving.value) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Save Employee")
+                    }
                 }
             }
         }
