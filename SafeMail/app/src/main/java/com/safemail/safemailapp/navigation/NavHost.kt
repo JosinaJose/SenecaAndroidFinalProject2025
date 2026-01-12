@@ -151,12 +151,11 @@ fun MyNavHost(navController: NavHostController) {
             TodoScreen(
                 viewModel = todoViewModel,
                 onBack = {
-                    navController.navigate(NavItem.Home.route) {
-                        popUpTo(NavItem.Home.route) { inclusive = false }
-                    }
+                    navController.popBackStack()
                 }
             )
         }
+
 
         composable(NavItem.StickyNotes.route) {
             val stickyViewModel: StickyNotesViewModel = viewModel(
@@ -165,12 +164,11 @@ fun MyNavHost(navController: NavHostController) {
             StickyNotesScreen(
                 viewModel = stickyViewModel,
                 onBack = {
-                    navController.navigate(NavItem.Home.route) {
-                        popUpTo(NavItem.Home.route) { inclusive = false }
-                    }
+                    navController.popBackStack()
                 }
             )
         }
+
 
         composable(NavItem.News.route) {
             if (adminEmail.isNotEmpty()) {
